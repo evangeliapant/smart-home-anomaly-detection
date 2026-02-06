@@ -209,3 +209,6 @@ __marimo__/
 
 # Ignore raw datasets (too big for GitHub)
 data/raw/
+
+#Ignore draft report
+report/

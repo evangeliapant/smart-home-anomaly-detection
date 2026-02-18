@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 from src.preprocessing.clean import load_events_csv
-from src.features.windowing import add_fixed_windows
+from src.features.windowing import add_fixed_windows, build_window_index
 from src.features.build_features import build_window_features
 from src.models.clustering import fit_kmeans
 from src.models.anomaly import fit_isolation_forest
@@ -16,7 +16,8 @@ def main():
 
     # Choose window length for baseline experiment
     events_w = add_fixed_windows(events, window_minutes=5)
-    feats = build_window_features(events_w)
+    win_index = build_window_index(events, window_minutes=5)
+    feats = build_window_features(events_w, window_index=win_index)
 
     os.makedirs("data/processed", exist_ok=True)
     feats.to_csv(OUT, index=False)

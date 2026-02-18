@@ -1,40 +1,111 @@
 # Smart Home Routines and Anomaly Detection
 
-This project explores how smart home sensor data can be analyzed to recognize user routines and detect anomalies, such as inactivity or unusual patterns. It uses unsupervised machine learning to derive insights from unlabeled data.
+This project investigates how smart home sensor data can be analyzed to automatically discover behavioral routines and detect anomalies using **unsupervised machine learning**.
 
-## 🧠 Goals
-- Analyze smart-home sensor data
-- Identify routine behavior
-- Detect anomalies using unsupervised learning
-- Demonstrate simple automation based on detected patterns
+The system focuses on learning from **unlabeled sensor streams**, avoiding the need for manual activity annotation. The objective is to explore how recurring patterns and potential automation rules can be derived directly from raw event data.
 
-## 🔍 Unsupervised Focus
-The project prioritizes learning from **unlabeled** smart-home data to avoid manual
-annotation, which is costly and impractical for most real-world deployments. The
-pipeline therefore emphasizes:
-- Pattern discovery from routine behavior without ground-truth labels
-- Anomaly detection as deviations from learned routines
-- Optional automation triggers derived from recurring patterns
+---
+
+## 🧠 Project Objectives
+
+- Process raw smart-home sensor event streams
+- Discover recurring behavioral states via unsupervised clustering
+- Detect anomalous activity and inactivity patterns
+- Model routine stability across multiple days
+- Derive explainable automation suggestions from learned routines
+
+---
+
+## 🔍 Unsupervised Learning Approach
+
+In many real-world deployments, smart home systems do not rely on labeled activity datasets. This project therefore emphasizes:
+
+- Pattern discovery from unlabeled sensor data
+- Explicit modeling of inactivity (zero-filled time windows)
+- Behavioral state identification using clustering
+- Routine stability analysis based on frequency and temporal consistency
+- Conservative automation inference derived from stable habits
+
+No ground-truth labels are required.
+
+---
+
+## 🧩 System Components
+
+### 1. Windowing & Feature Engineering
+
+- Fixed-length time windows (e.g., 5 minutes)
+- Per-sensor activation counts
+- Time-of-day and day-of-week encoding
+- Modeling of inactive periods
+
+### 2. Behavioral State Discovery
+
+- Unsupervised clustering of window-level features
+- Cluster profiling (dominant sensor, peak hour, activity level)
+
+### 3. Routine Stability Analysis
+
+- Daily aggregation of cluster activity
+- Stability scoring combining frequency and time regularity
+
+### 4. Automation Prototype
+
+- Tiered automation suggestions (AUTO / RECOMMEND / MONITOR)
+- Fully data-driven and cluster-profile based
+
+---
 
 ## 🧰 Tech Stack
-- Python (pandas, numpy, scikit-learn, TensorFlow)
-- CASAS & custom datasets
-- Visualization: matplotlib / plotly
-- Optional integration: Home Assistant
 
-## 📂 Structure
-- `data/` — Raw and processed datasets  
-- `notebooks/` — Jupyter notebooks for analysis and modeling  
-- `src/` — Core Python scripts  
-- `reports/` — Progress and final documentation  
+- Python
+- pandas
+- numpy
+- scikit-learn
+- matplotlib
+- CASAS dataset (unlabeled)
 
-## 🚀 Getting Started
+---
+
+## 📂 Project Structure
+
+smart-home-anomaly-detection/
+
+├─ data/ # Raw and processed datasets
+├─ src/
+│ ├─ preprocessing/ # Data cleaning
+│ ├─ features/ # Windowing & feature engineering
+│ ├─ models/ # Clustering & anomaly detection
+│ └─ automation/ # Cluster profiling & routine inference
+├─ scripts/ # Pipeline & demo runners
+├─ notebooks/ # Exploratory analysis
+├─ outputs/ # Saved models & figures
+└─ report/ # Documentation
+
+---
+
+## 🚀 Running the Project
+
 1. Clone the repo:
-   ```bash
+
+```bash
    git clone https://github.com/YOUR_USERNAME/smart-home-anomaly-detection.git
-   ```
+```
 
 2. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
+
+3. Run the full processing pipeline:
+
+```bash
+python -m scripts.run_pipeline
+```
+
+4. View cluster summaries, anomalies, and automation suggestions:
+
+```bash
+python -m scripts.run_demo
+```

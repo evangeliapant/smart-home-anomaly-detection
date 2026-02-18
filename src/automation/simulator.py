@@ -17,7 +17,7 @@ def explain_anomaly(row: pd.Series) -> str:
     uniq = float(row.get("n_sensors_active", 0))
 
     if total == 0:
-        return "Inactivity window (no sensor events)"
+        return "No activity in this window (normal if short)"
     if total > 150:
         return "Unusually high event rate (burst of activity)"
     if uniq >= 6:
@@ -157,7 +157,7 @@ def derive_automation_rule(profile: ClusterProfile) -> str:
     if activity > 80 or uniq >= 5:
         return "High activity detected: ensure ventilation active"
 
-    return "No specific automation rule"
+    return "No profile-based rule (use routine suggestions or monitor)"
 
 
 def automation_from_cluster(cluster_id: int, profiles: Dict[int, ClusterProfile]) -> str:

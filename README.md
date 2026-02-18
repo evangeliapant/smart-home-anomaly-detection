@@ -68,7 +68,7 @@ No ground-truth labels are required.
 ---
 
 ## 📂 Project Structure
-
+```
 smart-home-anomaly-detection/
 
 ├─ data/ # Raw and processed datasets
@@ -81,6 +81,7 @@ smart-home-anomaly-detection/
 ├─ notebooks/ # Exploratory analysis
 ├─ outputs/ # Saved models & figures
 └─ report/ # Documentation
+```
 
 ---
 
@@ -89,14 +90,14 @@ smart-home-anomaly-detection/
 1. Clone the repo:
 
 ```bash
-   git clone https://github.com/YOUR_USERNAME/smart-home-anomaly-detection.git
+git clone https://github.com/YOUR_USERNAME/smart-home-anomaly-detection.git
 ```
 
 2. Install dependencies:
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
 3. Run the full processing pipeline:
 

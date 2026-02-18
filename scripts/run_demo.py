@@ -4,7 +4,6 @@ import pandas as pd
 from src.automation.simulator import (
     explain_anomaly,
     build_cluster_profiles,
-    automation_from_cluster,
     infer_sensor_columns,
 )
 
@@ -45,13 +44,16 @@ def main():
     print(habits.head(10)[["cluster","frequency","avg_peak_hour","std_peak_hour","stability_score"]])
 
     print("\nAutomation suggestions from stable habits:")
-    print(suggestions.head(10)[["cluster","top_sensor","avg_peak_hour","frequency","stability_score","suggestion"]])
+    print(suggestions.head(10)[["cluster","top_sensor","avg_peak_hour","frequency","stability_score","level","suggestion"]])
 
-    # --- Automations derived from profiles (per-row demo) ---
-    print("\nSample automations (first 15 rows):")
+    # Build a quick lookup: cluster -> suggestion text
+    suggestion_map = {int(r["cluster"]): r["suggestion"] for _, r in suggestions.iterrows()}
+
+    # --- Habit-based automation suggestions (per-row demo) ---
+    print("\nSample habit-based automations (first 15 rows):")
     for _, r in df.head(15).iterrows():
-        action = automation_from_cluster(int(r["cluster"]), profiles)
-        print(r["window_start"], "-", action)
+        action = suggestion_map.get(int(r["cluster"]), "No suggestion")
+        print(r["window_start"], "-", action, f"(cluster={int(r['cluster'])})")
 
 if __name__ == "__main__":
     main()

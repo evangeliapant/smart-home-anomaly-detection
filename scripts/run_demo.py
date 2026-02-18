@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import pandas as pd
 
 from src.automation.simulator import (
@@ -7,6 +6,12 @@ from src.automation.simulator import (
     build_cluster_profiles,
     automation_from_cluster,
     infer_sensor_columns,
+)
+
+from src.automation.routines import (
+    compute_cluster_daily_stats,
+    compute_routine_scores,
+    suggest_automations,
 )
 
 def main():
@@ -31,7 +36,18 @@ def main():
             f"top_sensor={p.top_sensor} mean_events={p.mean_total_events:.2f}"
         )
 
-    # --- Automations derived from profiles ---
+    # --- Habit stability modeling ---
+    daily = compute_cluster_daily_stats(df)
+    habits = compute_routine_scores(daily)
+    suggestions = suggest_automations(habits, profiles)
+
+    print("\nTop habit clusters:")
+    print(habits.head(10)[["cluster","frequency","avg_peak_hour","std_peak_hour","stability_score"]])
+
+    print("\nAutomation suggestions from stable habits:")
+    print(suggestions.head(10)[["cluster","top_sensor","avg_peak_hour","frequency","stability_score","suggestion"]])
+
+    # --- Automations derived from profiles (per-row demo) ---
     print("\nSample automations (first 15 rows):")
     for _, r in df.head(15).iterrows():
         action = automation_from_cluster(int(r["cluster"]), profiles)

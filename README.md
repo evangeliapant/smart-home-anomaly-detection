@@ -104,6 +104,18 @@ smart-home-anomaly-detection/
 python -m scripts.run_pipeline
 ```
 
+You can also choose a different house or tune the experiment parameters from the CLI:
+
+```bash
+python -m scripts.run_pipeline --house hh102 --window-minutes 10 --n-clusters 8 --contamination 0.03
+```
+
+For a custom dataset path or custom output paths:
+
+```bash
+python -m scripts.run_pipeline --raw data/raw/hh102.csv --features-out data/processed/hh102_features.csv --features-models-out data/processed/hh102_features_with_models.csv
+```
+
 4. View cluster summaries, anomalies, and automation suggestions:
 
 ```bash

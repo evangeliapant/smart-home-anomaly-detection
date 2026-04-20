@@ -1,6 +1,6 @@
 # Smart Home Routines and Anomaly Detection
 
-This project explores how smart-home sensor streams can be used to discover recurring routines and flag unusual behavior with unsupervised learning.
+This project investigates how smart-home sensor streams can be transformed into interpretable behavioral patterns and anomalous events using unsupervised learning.
 
 The pipeline works on CASAS-style event logs and is organized into four stages:
 
@@ -40,23 +40,25 @@ More detail on the data folders is in `data/README.md`.
 
 ## Setup
 
+Recommended environment: `Python 3.11+`
+
 1. Clone the repository.
 2. Create a virtual environment.
-3. Install dependencies.
+3. Install the runtime dependencies.
 
-```bash
+```powershell
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-If you want to run the notebooks as well, install the notebook extras:
+If you also want to run the notebooks, install the notebook extras:
 
 ```bash
 pip install -r requirements-notebooks.txt
 ```
 
-The repository includes a small synthetic dataset at `data/sample/sample_home.csv`, so a fresh clone can run a smoke test without downloading the full CASAS data first.
+The repository includes a small synthetic dataset at `data/sample/sample_home.csv`, so a fresh clone can be used for a smoke test without downloading a full CASAS dataset first.
 
 ## Running the Project
 
@@ -67,7 +69,7 @@ python -m scripts.run_pipeline
 python -m scripts.run_demo
 ```
 
-Run on a local CASAS file placed in `data/raw/`:
+Run the same workflow on a local CASAS file placed in `data/raw/`:
 
 ```bash
 python -m scripts.run_pipeline --house hh101
@@ -75,10 +77,16 @@ python -m scripts.run_demo --house hh101
 python -m scripts.cluster_profile --house hh101
 ```
 
-Run the full evaluation flow for one or more local homes, including notebook-driven figures/tables:
+Run the full evaluation flow for one or more local homes, including notebook-generated figures and tables:
 
 ```bash
 python -m scripts.run_house_evaluation --houses hh101 hh102
+```
+
+Create a combined markdown summary report from the generated outputs:
+
+```bash
+python -m scripts.create_results_report --houses hh101 hh102
 ```
 
 ## Notebook Workflow
@@ -95,7 +103,7 @@ Generated notebook artifacts are written here:
 - `outputs/tables/hh101/` and `outputs/tables/hh102/`
 - `outputs/notebooks/hh101/` and `outputs/notebooks/hh102/` for execution logs
 
-This means the notebooks currently act as analysis templates rather than saved executed notebooks.
+In practice, this means the notebooks currently act as analysis templates rather than saved executed notebooks.
 
 If you want to open and run the notebooks manually in VS Code or Jupyter for a specific home, set the house in the terminal first and then launch Jupyter.
 
@@ -119,7 +127,7 @@ Then run the notebooks in this order:
 2. `notebooks/02_routine_discovery.ipynb`
 3. `notebooks/03_anomaly_analysis.ipynb`
 
-Running them interactively will show the plots and still save the generated figures and tables into the per-home `outputs/` folders.
+Running them interactively will display the plots and still save the generated figures and tables into the per-home `outputs/` folders.
 
 In short:
 
@@ -127,7 +135,18 @@ In short:
 - yes, they produce the visuals and summary tables
 - no, the automated flow does not currently save output-filled `.ipynb` notebook files
 
-Run on an explicit CSV path with custom settings:
+## Generated Outputs
+
+After running the project on a home dataset such as `hh101` or `hh102`, the main outputs are:
+
+- `data/processed/<house>_features.csv` for engineered window-level features
+- `data/processed/<house>_features_with_models.csv` for features plus cluster and anomaly outputs
+- `outputs/figures/<house>/` for notebook-generated visualizations
+- `outputs/tables/<house>/` for notebook-generated summary tables
+- `outputs/reports/<house>/` for text summaries from the demo and cluster profile scripts
+- `report/evaluation_results.md` for the combined markdown report across homes
+
+You can also run the pipeline on an explicit CSV path with custom settings:
 
 ```bash
 python -m scripts.run_pipeline --raw data/raw/hh102.csv --window-minutes 10 --n-clusters 8 --contamination 0.03
@@ -142,7 +161,7 @@ The full CASAS datasets are not committed to the repository. To use them:
 2. place it in `data/raw/` with a name like `hh101.csv` or `hh102.csv`
 3. run the pipeline with `--house <name>` or `--raw <path>`
 
-If a requested raw file is missing, the scripts now fail with a direct message telling you where the data should go.
+If a requested raw file is missing, the scripts fail with a direct message explaining where the data should be placed.
 
 ## Modeling Notes
 

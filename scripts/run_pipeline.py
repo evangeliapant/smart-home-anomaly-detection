@@ -1,14 +1,20 @@
 from __future__ import annotations
+
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-from src.preprocessing.clean import load_events_csv
-from src.features.windowing import add_fixed_windows, build_window_index
 from src.features.build_features import build_window_features
-from src.models.clustering import fit_kmeans
+from src.features.windowing import add_fixed_windows, build_window_index
 from src.models.anomaly import fit_isolation_forest
+from src.models.clustering import fit_kmeans
+from src.pipeline_paths import (
+    DEFAULT_SAMPLE_RAW,
+    default_output_path,
+    ensure_parent_dir,
+    raw_path_for_house,
+)
+from src.preprocessing.clean import load_events_csv
 
-DEFAULT_HOUSE = "hh101"
 DEFAULT_WINDOW_MINUTES = 5
 DEFAULT_N_CLUSTERS = 6
 DEFAULT_CONTAMINATION = 0.02
@@ -21,8 +27,7 @@ def parse_args() -> Namespace:
     )
     parser.add_argument(
         "--house",
-        default=DEFAULT_HOUSE,
-        help="Dataset name under data/raw without the .csv suffix. Ignored if --raw is provided.",
+        help="Dataset name under data/raw without the .csv suffix.",
     )
     parser.add_argument(
         "--raw",
@@ -78,20 +83,22 @@ def validate_args(args: Namespace) -> None:
 def resolve_raw_path(args: Namespace) -> Path:
     if args.raw is not None:
         return args.raw
-    return Path("data") / "raw" / f"{args.house}.csv"
+    if args.house:
+        return raw_path_for_house(args.house)
+    return DEFAULT_SAMPLE_RAW
 
 
-def default_output_path(raw_path: Path, suffix: str) -> Path:
-    processed_dir = Path("data") / "processed"
-    if raw_path == Path("data") / "raw" / f"{DEFAULT_HOUSE}.csv":
-        filename = "features.csv" if suffix == "features" else "features_with_models.csv"
-    else:
-        filename = f"{raw_path.stem}_{suffix}.csv"
-    return processed_dir / filename
+def missing_data_message(raw_path: Path) -> str:
+    if raw_path == DEFAULT_SAMPLE_RAW:
+        return (
+            f"Bundled sample dataset not found: {raw_path}. "
+            "The repository should include this file for a fresh-clone smoke test."
+        )
 
-
-def ensure_parent_dir(path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
+    return (
+        f"Raw dataset not found: {raw_path}. "
+        "Place the CASAS CSV in data/raw/ or pass --raw with an explicit file path."
+    )
 
 
 def main() -> None:
@@ -100,7 +107,7 @@ def main() -> None:
 
     raw_path = resolve_raw_path(args)
     if not raw_path.exists():
-        raise FileNotFoundError(f"Raw dataset not found: {raw_path}")
+        raise FileNotFoundError(missing_data_message(raw_path))
 
     features_out = args.features_out or default_output_path(raw_path, "features")
     features_models_out = args.features_models_out or default_output_path(raw_path, "features_with_models")
@@ -112,8 +119,6 @@ def main() -> None:
     )
 
     events = load_events_csv(str(raw_path))
-
-    # Choose window length for baseline experiment
     events_w = add_fixed_windows(events, window_minutes=args.window_minutes)
     win_index = build_window_index(events, window_minutes=args.window_minutes)
     feats = build_window_features(events_w, window_index=win_index)
@@ -121,7 +126,6 @@ def main() -> None:
     ensure_parent_dir(features_out)
     feats.to_csv(features_out, index=False)
 
-    # Clustering
     _kmeans, _scaler_c, labels, sil = fit_kmeans(
         feats,
         n_clusters=args.n_clusters,
@@ -130,13 +134,12 @@ def main() -> None:
     feats["cluster"] = labels
     print(f"KMeans silhouette: {sil}")
 
-    # Anomaly
     _iforest, _scaler_a, pred, score = fit_isolation_forest(
         feats,
         contamination=args.contamination,
         random_state=args.random_state,
     )
-    feats["is_anomaly"] = (pred == -1)
+    feats["is_anomaly"] = pred == -1
     feats["anomaly_score"] = score
 
     ensure_parent_dir(features_models_out)
@@ -144,6 +147,7 @@ def main() -> None:
 
     print(f"Saved features: {features_out}")
     print(f"Saved modeled features: {features_models_out}")
+
 
 if __name__ == "__main__":
     main()

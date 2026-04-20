@@ -57,5 +57,6 @@ def build_window_features(
 
     # Day-of-week (0=Mon)
     out["dow"] = dt.dt.dayofweek
+    out["is_inactive"] = (out["total_events"] == 0).astype(int)
 
     return out

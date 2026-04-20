@@ -1,0 +1,7 @@
+cluster,n_windows,mean_total_events,mean_unique_sensors,inactive_fraction,peak_hour,top_sensor_1,top_sensor_2
+0,72506,0.0,0.0,1.0,16.0,No active sensor,
+1,59262,13.944365698086463,1.5605278255880666,0.0,20.0,LivingRoom,Bedroom
+2,11823,90.93428063943162,4.504694240040599,0.0,20.0,LivingRoom,WorkArea
+3,118668,0.0,0.0,1.0,4.0,No active sensor,
+4,16084,84.22009450385477,3.1750186520765977,0.0,19.0,Kitchen,DiningRoom
+5,20200,78.32970297029703,2.5546039603960398,0.0,21.0,Bathroom,Bedroom

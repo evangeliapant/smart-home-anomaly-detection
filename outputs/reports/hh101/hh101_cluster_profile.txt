@@ -1,0 +1,75 @@
+
+==== CLUSTER PROFILES ====
+
+
+CLUSTER 0
+active_window_count = 0
+total_window_count = 27669
+inactive_window_fraction = 1.00
+is_inactivity_cluster = True
+mean_hour = 16.83
+peak_hour = 18.00
+top_sensor = No active sensor
+mean_total_events = 0.00
+mean_unique_sensors = 0.00
+----------------------------------------
+
+CLUSTER 1
+active_window_count = 3378
+total_window_count = 3378
+inactive_window_fraction = 0.00
+is_inactivity_cluster = False
+mean_hour = 14.32
+peak_hour = 14.00
+top_sensor = LivingRoom
+mean_total_events = 57.83
+mean_unique_sensors = 3.35
+----------------------------------------
+
+CLUSTER 2
+active_window_count = 4835
+total_window_count = 4835
+inactive_window_fraction = 0.00
+is_inactivity_cluster = False
+mean_hour = 11.79
+peak_hour = 12.00
+top_sensor = Bedroom
+mean_total_events = 85.65
+mean_unique_sensors = 2.23
+----------------------------------------
+
+CLUSTER 3
+active_window_count = 3664
+total_window_count = 3664
+inactive_window_fraction = 0.00
+is_inactivity_cluster = False
+mean_hour = 13.42
+peak_hour = 10.00
+top_sensor = Kitchen
+mean_total_events = 90.07
+mean_unique_sensors = 3.09
+----------------------------------------
+
+CLUSTER 4
+active_window_count = 0
+total_window_count = 33785
+inactive_window_fraction = 1.00
+is_inactivity_cluster = True
+mean_hour = 5.85
+peak_hour = 2.00
+top_sensor = No active sensor
+mean_total_events = 0.00
+mean_unique_sensors = 0.00
+----------------------------------------
+
+CLUSTER 5
+active_window_count = 33796
+total_window_count = 33796
+inactive_window_fraction = 0.00
+is_inactivity_cluster = False
+mean_hour = 13.71
+peak_hour = 10.00
+top_sensor = LivingRoom
+mean_total_events = 10.26
+mean_unique_sensors = 1.12
+----------------------------------------

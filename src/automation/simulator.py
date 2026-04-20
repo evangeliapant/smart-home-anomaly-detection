@@ -41,6 +41,9 @@ class ClusterProfile:
     is_inactivity_cluster: bool
 
 
+INACTIVE_SENSOR_LABEL = "No active sensor"
+
+
 def _ensure_datetime(df: pd.DataFrame, time_col: str = "window_start") -> pd.DataFrame:
     out = df.copy()
     out[time_col] = pd.to_datetime(out[time_col], errors="coerce")
@@ -128,8 +131,8 @@ def build_cluster_profiles(
 
         # Top sensor by mean count
         sensor_means = ref[sensor_cols].mean(numeric_only=True)
-        top_sensor = "Unknown"
-        if not sensor_means.empty:
+        top_sensor = INACTIVE_SENSOR_LABEL if active_sub.empty else "Unknown"
+        if not sensor_means.empty and float(sensor_means.max()) > 0:
             top_sensor = str(sensor_means.sort_values(ascending=False).index[0])
 
         profiles[int(k)] = ClusterProfile(

@@ -75,6 +75,58 @@ python -m scripts.run_demo --house hh101
 python -m scripts.cluster_profile --house hh101
 ```
 
+Run the full evaluation flow for one or more local homes, including notebook-driven figures/tables:
+
+```bash
+python -m scripts.run_house_evaluation --houses hh101 hh102
+```
+
+## Notebook Workflow
+
+The Jupyter notebooks are part of the evaluation workflow, with one important detail:
+
+- the notebooks are used to generate per-home results, figures, and tables
+- the batch script does not currently save fully executed `.ipynb` files with visible cell outputs
+- instead, it executes the notebook code cells directly and writes artifacts to disk
+
+Generated notebook artifacts are written here:
+
+- `outputs/figures/hh101/` and `outputs/figures/hh102/`
+- `outputs/tables/hh101/` and `outputs/tables/hh102/`
+- `outputs/notebooks/hh101/` and `outputs/notebooks/hh102/` for execution logs
+
+This means the notebooks currently act as analysis templates rather than saved executed notebooks.
+
+If you want to open and run the notebooks manually in VS Code or Jupyter for a specific home, set the house in the terminal first and then launch Jupyter.
+
+For `hh101`:
+
+```powershell
+$env:SMART_HOME_HOUSE='hh101'
+python -m jupyter notebook
+```
+
+For `hh102`:
+
+```powershell
+$env:SMART_HOME_HOUSE='hh102'
+python -m jupyter notebook
+```
+
+Then run the notebooks in this order:
+
+1. `notebooks/01_exploration.ipynb`
+2. `notebooks/02_routine_discovery.ipynb`
+3. `notebooks/03_anomaly_analysis.ipynb`
+
+Running them interactively will show the plots and still save the generated figures and tables into the per-home `outputs/` folders.
+
+In short:
+
+- yes, the notebooks are already being used
+- yes, they produce the visuals and summary tables
+- no, the automated flow does not currently save output-filled `.ipynb` notebook files
+
 Run on an explicit CSV path with custom settings:
 
 ```bash
@@ -98,6 +150,7 @@ If a requested raw file is missing, the scripts now fail with a direct message t
 - routine scoring now uses active windows by default so inactivity-heavy clusters do not dominate "habit" discovery
 - automation suggestions are downgraded to `MONITOR` for inactivity-dominant clusters
 - cluster profiling is data-driven and no longer depends on a hardcoded sensor schema
+- KMeans silhouette scoring is sampled on large datasets by default so larger homes remain practical to run
 
 ## Tests
 

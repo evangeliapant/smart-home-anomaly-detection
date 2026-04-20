@@ -6,7 +6,7 @@ from pathlib import Path
 from src.features.build_features import build_window_features
 from src.features.windowing import add_fixed_windows, build_window_index
 from src.models.anomaly import fit_isolation_forest
-from src.models.clustering import fit_kmeans
+from src.models.clustering import DEFAULT_SILHOUETTE_SAMPLE_SIZE, fit_kmeans
 from src.pipeline_paths import (
     DEFAULT_SAMPLE_RAW,
     default_output_path,
@@ -19,6 +19,7 @@ DEFAULT_WINDOW_MINUTES = 5
 DEFAULT_N_CLUSTERS = 6
 DEFAULT_CONTAMINATION = 0.02
 DEFAULT_RANDOM_STATE = 42
+DEFAULT_SILHOUETTE_SAMPLE = DEFAULT_SILHOUETTE_SAMPLE_SIZE
 
 
 def parse_args() -> Namespace:
@@ -59,6 +60,12 @@ def parse_args() -> Namespace:
         help="Random seed shared by the clustering and anomaly models.",
     )
     parser.add_argument(
+        "--silhouette-sample-size",
+        type=int,
+        default=DEFAULT_SILHOUETTE_SAMPLE,
+        help="Maximum number of windows used to estimate the KMeans silhouette score; 0 skips it.",
+    )
+    parser.add_argument(
         "--features-out",
         type=Path,
         help="CSV path for engineered features before model predictions are added.",
@@ -78,6 +85,8 @@ def validate_args(args: Namespace) -> None:
         raise ValueError("--n-clusters must be at least 2")
     if not 0 < args.contamination <= 0.5:
         raise ValueError("--contamination must be between 0 and 0.5")
+    if args.silhouette_sample_size < 0:
+        raise ValueError("--silhouette-sample-size must be greater than or equal to 0")
 
 
 def resolve_raw_path(args: Namespace) -> Path:
@@ -130,9 +139,15 @@ def main() -> None:
         feats,
         n_clusters=args.n_clusters,
         random_state=args.random_state,
+        silhouette_sample_size=args.silhouette_sample_size,
     )
     feats["cluster"] = labels
-    print(f"KMeans silhouette: {sil}")
+    if args.silhouette_sample_size == 0:
+        print("KMeans silhouette: skipped")
+    elif args.silhouette_sample_size and len(feats) > args.silhouette_sample_size:
+        print(f"KMeans silhouette (sampled {args.silhouette_sample_size} windows): {sil}")
+    else:
+        print(f"KMeans silhouette: {sil}")
 
     _iforest, _scaler_a, pred, score = fit_isolation_forest(
         feats,

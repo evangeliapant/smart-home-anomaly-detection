@@ -34,7 +34,7 @@ No ground-truth labels are required.
 
 ### 1. Windowing & Feature Engineering
 
-- Fixed-length time windows (e.g., 5 minutes)
+- Fixed-length time windows (default: 60 minutes)
 - Per-sensor activation counts
 - Time-of-day and day-of-week encoding
 - Modeling of inactive periods
@@ -99,13 +99,19 @@ git clone https://github.com/YOUR_USERNAME/smart-home-anomaly-detection.git
 pip install -r requirements.txt
 ```
 
-3. Run the full processing pipeline:
+3. Run the full processing pipeline with the default hourly windowing:
 
 ```bash
 python -m scripts.run_pipeline
 ```
 
-4. View cluster summaries, anomalies, and automation suggestions:
+4. Optionally override the window size for experiments:
+
+```bash
+python -m scripts.run_pipeline --window-minutes 15
+```
+
+5. View cluster summaries, anomalies, and automation suggestions:
 
 ```bash
 python -m scripts.run_demo

@@ -10,6 +10,7 @@ from src.automation.simulator import build_cluster_profiles, explain_anomaly, in
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_WINDOW_MINUTES = 60
 
 
 def parse_args() -> Namespace:
@@ -25,6 +26,12 @@ def parse_args() -> Namespace:
         type=Path,
         default=Path("report/evaluation_results.md"),
         help="Markdown file to write.",
+    )
+    parser.add_argument(
+        "--window-minutes",
+        type=int,
+        default=DEFAULT_WINDOW_MINUTES,
+        help="Window size in minutes used to produce the modeled outputs.",
     )
     return parser.parse_args()
 
@@ -42,7 +49,7 @@ def format_dataframe(df: pd.DataFrame) -> str:
     return "\n".join([header, separator, *body])
 
 
-def build_house_section(house: str) -> str:
+def build_house_section(house: str, window_minutes: int) -> str:
     raw_path = ROOT / "data" / "raw" / f"{house}.csv"
     modeled_path = ROOT / "data" / "processed" / f"{house}_features_with_models.csv"
     if not raw_path.exists():
@@ -110,6 +117,7 @@ def build_house_section(house: str) -> str:
         f"## {house.upper()}",
         "",
         f"- Raw events: `{raw_lines:,}`",
+        f"- Window size: `{window_minutes}` minutes",
         f"- Modeled windows: `{len(df):,}`",
         f"- Active windows: `{active_windows:,}`",
         f"- Inactive windows: `{inactive_windows:,}`",
@@ -150,9 +158,11 @@ def main() -> None:
         "",
         "This report summarizes the per-home results generated from the project pipeline and notebooks.",
         "",
+        f"The modeled outputs in this report were generated with `{args.window_minutes}`-minute windows.",
+        "",
     ]
     for house in args.houses:
-        sections.append(build_house_section(house))
+        sections.append(build_house_section(house, args.window_minutes))
 
     output_path = ROOT / args.output
     output_path.parent.mkdir(parents=True, exist_ok=True)

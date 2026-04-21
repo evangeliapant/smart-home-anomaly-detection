@@ -9,6 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_WINDOW_MINUTES = 60
 NOTEBOOKS = [
     "01_exploration.ipynb",
     "02_routine_discovery.ipynb",
@@ -41,6 +42,12 @@ def parse_args() -> Namespace:
         type=int,
         default=10,
         help="How many rows the textual report scripts should show.",
+    )
+    parser.add_argument(
+        "--window-minutes",
+        type=int,
+        default=DEFAULT_WINDOW_MINUTES,
+        help="Window size in minutes to use when rerunning the pipeline.",
     )
     return parser.parse_args()
 
@@ -129,7 +136,17 @@ def main() -> None:
             raise FileNotFoundError(f"Raw dataset not found: {raw_path}")
 
         if not args.skip_pipeline:
-            run_command([sys.executable, "-m", "scripts.run_pipeline", "--house", house])
+            run_command(
+                [
+                    sys.executable,
+                    "-m",
+                    "scripts.run_pipeline",
+                    "--house",
+                    house,
+                    "--window-minutes",
+                    str(args.window_minutes),
+                ]
+            )
 
         run_text_reports(house, args.top_n)
 

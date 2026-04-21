@@ -1,43 +1,46 @@
-Loaded 107127 windows from data\processed\hh101_features_with_models.csv (61454 inactive windows, 45673 active windows).
+Loaded 8929 windows from data\processed\hh101_features_with_models.csv (1275 inactive windows, 7654 active windows).
 
 Top 10 anomalies:
-2012-07-20 11:35:00 - Unusually high event rate (burst of activity)
-2012-10-07 06:55:00 - Unusually high event rate (burst of activity)
-2013-03-28 10:00:00 - Unusually high event rate (burst of activity)
-2012-09-01 00:05:00 - Unusually high event rate (burst of activity)
-2013-01-27 00:35:00 - Unusually high event rate (burst of activity)
-2013-04-07 00:05:00 - Unusually high event rate (burst of activity)
-2012-07-22 06:35:00 - Many sensors active in a short period (multi-room activity)
-2012-12-24 10:50:00 - Unusually high event rate (burst of activity)
-2013-02-22 00:15:00 - Unusually high event rate (burst of activity)
-2012-07-26 07:30:00 - Many sensors active in a short period (multi-room activity)
+2012-07-20 11:00:00 - Unusually high event rate (burst of activity)
+2012-10-24 13:00:00 - Unusually high event rate (burst of activity)
+2012-09-06 11:00:00 - Unusually high event rate (burst of activity)
+2013-01-17 10:00:00 - Unusually high event rate (burst of activity)
+2012-10-04 13:00:00 - Unusually high event rate (burst of activity)
+2012-10-17 17:00:00 - Unusually high event rate (burst of activity)
+2013-04-28 19:00:00 - Unusually high event rate (burst of activity)
+2012-11-12 09:00:00 - Unusually high event rate (burst of activity)
+2013-02-11 12:00:00 - Unusually high event rate (burst of activity)
+2012-10-07 12:00:00 - Unusually high event rate (burst of activity)
 
 Cluster profiles (summary):
-cluster=0 peak_hour=18.0 top_sensor=No active sensor mean_events=0.00 inactive_fraction=1.00
-cluster=1 peak_hour=14.0 top_sensor=LivingRoom mean_events=57.83 inactive_fraction=0.00
-cluster=2 peak_hour=12.0 top_sensor=Bedroom mean_events=85.65 inactive_fraction=0.00
-cluster=3 peak_hour=10.0 top_sensor=Kitchen mean_events=90.07 inactive_fraction=0.00
-cluster=4 peak_hour=2.0 top_sensor=No active sensor mean_events=0.00 inactive_fraction=1.00
-cluster=5 peak_hour=10.0 top_sensor=LivingRoom mean_events=10.26 inactive_fraction=0.00
+cluster=0 peak_hour=4.0 top_sensor=LivingRoom mean_events=41.03 inactive_fraction=0.00
+cluster=1 peak_hour=9.0 top_sensor=Kitchen mean_events=396.66 inactive_fraction=0.00
+cluster=2 peak_hour=20.0 top_sensor=LivingRoom mean_events=48.74 inactive_fraction=0.00
+cluster=3 peak_hour=18.0 top_sensor=No active sensor mean_events=0.00 inactive_fraction=1.00
+cluster=4 peak_hour=11.0 top_sensor=Bedroom mean_events=612.52 inactive_fraction=0.00
+cluster=5 peak_hour=17.0 top_sensor=LivingRoom mean_events=222.78 inactive_fraction=0.00
 
 Top routine clusters (activity-only scoring):
    cluster  frequency  avg_peak_hour  std_peak_hour  stability_score
-1        2   0.983827      10.950685       3.025129         0.687784
-2        3   0.983827      10.709589       3.639382         0.626358
-3        5   1.000000      13.665768       5.433767         0.600000
-0        1   0.986523      12.262295       4.454587         0.591914
+1        1   0.924528       9.157434       2.248780         0.729839
+0        0   0.568733       0.635071       0.953441         0.645896
+4        5   0.986523       5.191257       3.623595         0.629554
+3        4   0.943396       9.720000       3.643324         0.601705
+2        2   0.563342       3.416268       4.922859         0.338005
 
 Automation suggestions from stable routines:
    cluster  ...                                         suggestion
-0        2  ...  RECOMMEND: recurring bedroom routine around 11...
-1        3  ...  RECOMMEND: recurring kitchen activity around 1...
+0        1  ...  RECOMMEND: recurring kitchen activity around 9...
+1        0  ...                                      No suggestion
 2        5  ...  RECOMMEND: recurring living-room presence arou...
-3        1  ...                                      No suggestion
+3        4  ...  RECOMMEND: recurring bedroom routine around 9....
+4        2  ...                                      No suggestion
 
-[4 rows x 8 columns]
+[5 rows x 8 columns]
 
 Sample routine-based automations (one example per cluster):
-2012-07-20 10:25:00 - [MONITOR] No suggestion (cluster=1, routine_peak~12.3h)
-2012-07-20 12:00:00 - [RECOMMEND] RECOMMEND: recurring bedroom routine around 11.0h -> suggest comfort/heating adjustment (cluster=2, routine_peak~11.0h)
-2012-07-20 11:55:00 - [RECOMMEND] RECOMMEND: recurring kitchen activity around 10.7h -> suggest ventilation/heating pre-adjustment (cluster=3, routine_peak~10.7h)
-2012-07-18 12:50:00 - [RECOMMEND] RECOMMEND: recurring living-room presence around 13.7h -> suggest comfort lighting/heating (cluster=5, routine_peak~13.7h)
+2012-07-23 00:00:00 - [MONITOR] No suggestion (cluster=0, routine_peak~0.6h)
+2012-07-20 11:00:00 - [RECOMMEND] RECOMMEND: recurring kitchen activity around 9.2h -> suggest ventilation/heating pre-adjustment (cluster=1, routine_peak~9.2h)
+2012-07-20 15:00:00 - [MONITOR] No suggestion (cluster=2, routine_peak~3.4h)
+2012-07-20 17:00:00 - [RECOMMEND] RECOMMEND: recurring bedroom routine around 9.7h -> suggest comfort/heating adjustment (cluster=4, routine_peak~9.7h)
+2012-07-18 12:00:00 - [RECOMMEND] RECOMMEND: recurring living-room presence around 5.2h -> suggest comfort lighting/heating (cluster=5, routine_peak~5.2h)

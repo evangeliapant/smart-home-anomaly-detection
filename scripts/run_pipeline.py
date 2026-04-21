@@ -15,7 +15,7 @@ from src.pipeline_paths import (
 )
 from src.preprocessing.clean import load_events_csv
 
-DEFAULT_WINDOW_MINUTES = 5
+DEFAULT_WINDOW_MINUTES = 60
 DEFAULT_N_CLUSTERS = 6
 DEFAULT_CONTAMINATION = 0.02
 DEFAULT_RANDOM_STATE = 42

@@ -1,48 +1,48 @@
 # Results
 
-This section summarizes the results produced by the smart-home anomaly detection pipeline on the two CASAS-style homes available locally in `data/raw/`: `hh101` and `hh102`. For both homes, the same workflow was used: raw event parsing, fixed-window feature generation, KMeans clustering for routine discovery, Isolation Forest for anomaly detection, and notebook-based visualization.
+This section summarizes the results produced by the smart-home anomaly detection pipeline on the two CASAS-style homes available locally in `data/raw/`: `hh101` and `hh102`. In this branch, the pipeline uses **60-minute windows** by default, so the results emphasize broader hourly routines instead of short five-minute activity bursts.
 
 ## Overview
 
 | Home | Raw events | Modeled windows | Active windows | Inactive windows | Anomalies |
 | --- | --- | --- | --- | --- | --- |
-| hh101 | 1,286,244 | 107,127 | 45,673 | 61,454 | 2,143 |
-| hh102 | 4,840,159 | 298,543 | 107,369 | 191,174 | 5,971 |
+| hh101 | 1,286,244 | 8,929 | 7,654 | 1,275 | 179 |
+| hh102 | 4,840,159 | 24,880 | 17,907 | 6,973 | 498 |
 
-The results show that both datasets contain a large amount of inactivity, which is expected in real homes because sensor logs include long quiet periods. The pipeline handled this explicitly by marking inactive windows and preventing inactivity-dominant clusters from being overinterpreted as meaningful routines.
+Compared with the earlier five-minute setup, hourly windowing greatly reduces the number of modeled observations and produces coarser but more interpretable routine groups. The tradeoff is that short-lived anomalies are smoothed into larger hourly behavior blocks.
 
 ## Results for HH101
 
-For `hh101`, the system processed more than 1.28 million raw events and converted them into 107,127 five-minute windows. Of these, 45,673 windows contained activity and 61,454 were inactive. The anomaly detector flagged 2,143 windows as anomalous.
+For `hh101`, the system processed more than 1.28 million raw events and aggregated them into `8,929` hourly windows. Of these, `7,654` windows contained activity and `1,275` were inactive. The anomaly detector flagged `179` windows as anomalous.
 
-The cluster structure in `hh101` separates background inactivity from several active behavioral states. Two clusters are clearly inactivity-dominant and are now labeled with `No active sensor`, while the active clusters are associated with interpretable spaces such as the living room, bedroom, and kitchen.
+With hourly aggregation, the cluster structure in `hh101` becomes easier to interpret at a daily-routine level. Instead of many short states, the model separates the home into broad patterns such as morning kitchen-centered activity, midday bedroom and bathroom activity, evening living-room and bedroom presence, and one clearly inactivity-dominant background cluster.
 
 ### Cluster Summary
 
 | Cluster | Windows | Mean events | Mean active sensors | Inactive fraction | Peak hour | Main interpretation |
 | --- | --- | --- | --- | --- | --- | --- |
-| 0 | 27,669 | 0.00 | 0.00 | 1.00 | 18.0 | Inactivity pattern |
-| 1 | 3,378 | 57.83 | 3.35 | 0.00 | 14.0 | Living-room centered activity |
-| 2 | 4,835 | 85.65 | 2.23 | 0.00 | 12.0 | Bedroom and bathroom routine |
-| 3 | 3,664 | 90.07 | 3.09 | 0.00 | 10.0 | Kitchen-centered routine |
-| 4 | 33,785 | 0.00 | 0.00 | 1.00 | 2.0 | Inactivity pattern |
-| 5 | 33,796 | 10.26 | 1.12 | 0.00 | 10.0 | Low-intensity living-room activity |
+| 0 | 2,123 | 41.03 | 1.48 | 0.00 | 4.0 | Night living-room and bedroom routine |
+| 1 | 698 | 396.66 | 4.50 | 0.00 | 9.0 | Morning kitchen-centered multi-room routine |
+| 2 | 2,016 | 48.74 | 1.59 | 0.00 | 20.0 | Evening living-room and bedroom routine |
+| 3 | 1,275 | 0.00 | 0.00 | 1.00 | 18.0 | Inactivity/background pattern |
+| 4 | 504 | 612.52 | 5.14 | 0.00 | 11.0 | Midday bedroom and bathroom routine |
+| 5 | 2,313 | 222.78 | 4.82 | 0.00 | 17.0 | Late-day multi-room activity |
 
-The most stable routines in `hh101` are clusters `2`, `3`, and `5`. Cluster `2` is associated with bedroom-centered behavior, cluster `3` with kitchen activity, and cluster `5` with lower-intensity living-room presence. These clusters were frequent enough across days to be surfaced by the routine scoring stage, although the stability scores indicate moderate rather than perfect regularity.
+The strongest routines in `hh101` are cluster `1` (morning kitchen activity), cluster `5` (late-day living-room centered multi-room activity), and cluster `4` (midday bedroom routine). Cluster `0` is stable in time but appears on fewer active days, so it remains below the promotion threshold for an action-oriented suggestion.
 
 ### Automation Interpretation
 
-The automation layer produced `RECOMMEND`-level suggestions for the strongest active routines:
+The automation layer produced `RECOMMEND`-level suggestions for the most stable active routines:
 
-- Bedroom-related comfort or heating adjustment for cluster `2`
-- Kitchen-related ventilation or heating pre-adjustment for cluster `3`
+- Kitchen-related ventilation or heating pre-adjustment for cluster `1`
 - Living-room comfort lighting or heating for cluster `5`
+- Bedroom-related comfort or heating adjustment for cluster `4`
 
-This is a useful result because it shows that the pipeline does not only cluster behavior, but also maps stable recurring patterns into explainable smart-home actions.
+This is useful because the hourly setup still produces explainable routine-to-action mappings, but now those mappings correspond to broader phases of the day rather than short five-minute episodes.
 
 ### Anomaly Interpretation
 
-The most extreme anomalies in `hh101` were high-density windows with unusually large event bursts, often involving many sensors at once. This suggests that the anomaly detector is primarily identifying short periods of atypically intense activity rather than only rare room usage.
+The most extreme anomalies in `hh101` are hourly windows with unusually high total event counts, often involving five or six active sensors. Under hourly windowing, the anomaly model is no longer isolating very short bursts; instead, it surfaces unusually intense **hours** of household activity.
 
 Useful visual outputs for `hh101`:
 
@@ -53,30 +53,36 @@ Useful visual outputs for `hh101`:
 
 ## Results for HH102
 
-For `hh102`, the system processed 4.84 million raw events and generated 298,543 five-minute windows. Out of these, 107,369 windows were active and 191,174 were inactive. The anomaly detector identified 5,971 anomalous windows.
+For `hh102`, the system processed 4.84 million raw events and generated `24,880` hourly windows. Out of these, `17,907` windows were active and `6,973` were inactive. The anomaly detector identified `498` anomalous windows.
 
-Compared with `hh101`, `hh102` is both larger and behaviorally richer. It includes an additional `WorkArea` sensor feature, and the resulting active clusters show a stronger spread across living-room, kitchen, bathroom, bedroom, and work-area activity.
+Compared with `hh101`, `hh102` remains larger and behaviorally richer even after hourly aggregation. The additional `WorkArea` sensor and the higher overall activity level lead to broader multi-room clusters that combine living-room, kitchen, bedroom, bathroom, and work-area behavior within the same hour.
 
 ### Cluster Summary
 
 | Cluster | Windows | Mean events | Mean active sensors | Inactive fraction | Peak hour | Main interpretation |
 | --- | --- | --- | --- | --- | --- | --- |
-| 0 | 72,506 | 0.00 | 0.00 | 1.00 | 16.0 | Inactivity pattern |
-| 1 | 59,262 | 13.94 | 1.56 | 0.00 | 20.0 | Lower-intensity living-room activity |
-| 2 | 11,823 | 90.93 | 4.50 | 0.00 | 20.0 | High multi-room living/work activity |
-| 3 | 118,668 | 0.00 | 0.00 | 1.00 | 4.0 | Inactivity pattern |
-| 4 | 16,084 | 84.22 | 3.18 | 0.00 | 19.0 | Kitchen and dining routine |
-| 5 | 20,200 | 78.33 | 2.55 | 0.00 | 21.0 | Bathroom and bedroom routine |
+| 0 | 6,973 | 0.00 | 0.00 | 1.00 | 1.0 | Inactivity/background pattern |
+| 1 | 1,924 | 617.73 | 5.69 | 0.00 | 18.0 | High-intensity evening kitchen/living routine |
+| 2 | 4,428 | 333.70 | 6.18 | 0.00 | 8.0 | Morning living-room and bedroom multi-room routine |
+| 3 | 5,396 | 52.71 | 1.92 | 0.00 | 23.0 | Late-night bedroom and bathroom routine |
+| 4 | 1,959 | 739.27 | 5.91 | 0.00 | 21.0 | Late-evening bathroom/bedroom/work-area routine |
+| 5 | 4,200 | 104.66 | 3.14 | 0.00 | 16.0 | Midday kitchen and living-room routine |
 
-The active structure in `hh102` is stronger than in `hh101`. Cluster `2` captures a high-activity pattern involving both living-room and work-area sensors, cluster `4` captures a kitchen and dining pattern, and cluster `5` captures bathroom and bedroom behavior. Two very large clusters again represent inactivity and should be interpreted as background state rather than meaningful routines.
+The most stable routines in `hh102` are cluster `3` (late-night bedroom behavior), cluster `5` (midday kitchen-centered activity), and cluster `2` (morning living-room presence). Cluster `4` is intense but more variable in timing, so it stays in `MONITOR` mode.
 
 ### Automation Interpretation
 
-For `hh102`, the automation stage produced one `RECOMMEND`-level suggestion for recurring living-room activity. The remaining top clusters were left in `MONITOR` mode. This is a reasonable outcome because the system is designed to be conservative: only clusters with sufficient routine stability and interpretable profile characteristics are promoted into action-oriented suggestions.
+For `hh102`, the automation stage produced three `RECOMMEND`-level suggestions:
+
+- Bedroom-related comfort or heating adjustment for cluster `3`
+- Kitchen-related ventilation or heating pre-adjustment for cluster `5`
+- Living-room comfort lighting or heating for cluster `2`
+
+This is a reasonable outcome because the system remains conservative: even with broad hourly windows, only clusters that are both interpretable and temporally stable are promoted into suggestion-level routines.
 
 ### Anomaly Interpretation
 
-The strongest anomalies in `hh102` are even more extreme than in `hh101`, with some windows containing well above 300 events and up to 7 simultaneously active sensors. These results indicate that the anomaly model is correctly surfacing unusually dense periods of behavior in a much larger and more complex home environment.
+The strongest anomalies in `hh102` are extreme hourly windows with very large event volumes, sometimes above `2,000` events and up to `7` active sensors in the same hour. These are no longer minute-scale spikes; they represent unusually dense periods of behavior at the level of a full hour.
 
 Useful visual outputs for `hh102`:
 
@@ -87,22 +93,22 @@ Useful visual outputs for `hh102`:
 
 ## Cross-Home Comparison
 
-Across both homes, the system shows consistent behavior:
+Across both homes, the system still shows consistent behavior with hourly aggregation:
 
 - It separates inactivity-heavy background windows from active routine clusters.
-- It discovers interpretable room-centered or multi-room patterns.
-- It flags short bursts of unusually intense activity as anomalies.
+- It discovers interpretable room-centered or multi-room hourly patterns.
+- It flags unusually intense hours as anomalies.
 - It remains conservative when generating automation suggestions.
 
-The main difference between the two homes is scale and complexity. `hh102` contains more raw events, more modeled windows, and a richer feature space due to the additional `WorkArea` sensor. As a result, it produces more anomalies and a wider range of active routine clusters. `hh101` is somewhat simpler, but still demonstrates the same end-to-end pipeline behavior and supports interpretable automation recommendations.
+The main difference between the two homes is still scale and complexity. `hh102` contains more raw events, more modeled hourly windows, and a richer feature space due to the additional `WorkArea` sensor. As a result, it produces more anomalies and broader multi-room clusters. `hh101` is simpler, but still demonstrates the same end-to-end pipeline behavior and supports interpretable hourly routine recommendations.
 
 ## Result Summary
 
-Overall, the project works as intended on both uploaded homes. The preprocessing, modeling, and notebook-based analysis all complete successfully, and the resulting outputs are suitable for inclusion in a course report or thesis chapter. The strongest claim supported by these results is that the system is a functioning and interpretable unsupervised smart-home analysis prototype that can:
+Overall, the project works as intended with hourly windowing. The preprocessing, modeling, and notebook-based analysis all complete successfully, and the resulting outputs remain suitable for inclusion in a course report or thesis chapter. With this branch configuration, the strongest claim is that the system is a functioning and interpretable unsupervised smart-home analysis prototype that can:
 
-- detect recurring behavioral states
+- detect recurring hourly behavioral states
 - distinguish activity from inactivity
-- identify anomalous windows
+- identify anomalous high-activity hours
 - derive conservative, explainable smart-home suggestions from stable routines
 
 For a final submission, the most useful supporting files are:

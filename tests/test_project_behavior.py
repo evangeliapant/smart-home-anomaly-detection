@@ -12,6 +12,7 @@ from scripts.run_pipeline import resolve_raw_path
 from src.automation.routines import compute_cluster_daily_stats, compute_routine_scores, suggest_automations
 from src.automation.simulator import INACTIVE_SENSOR_LABEL, build_cluster_profiles
 from src.features.build_features import build_window_features
+from src.features.windowing import build_window_index
 from src.models.clustering import fit_kmeans
 from src.pipeline_paths import DEFAULT_SAMPLE_RAW
 
@@ -38,6 +39,17 @@ class FeatureEngineeringTests(unittest.TestCase):
 
         self.assertEqual(features["is_inactive"].tolist(), [0, 1, 1])
         self.assertEqual(features["total_events"].tolist(), [2.0, 0.0, 0.0])
+
+    def test_build_window_index_does_not_add_trailing_empty_window(self) -> None:
+        events = pd.DataFrame(
+            {
+                "timestamp": pd.to_datetime(["2024-01-01 06:00:01", "2024-01-01 06:04:59"]),
+            }
+        )
+
+        window_index = build_window_index(events, window_minutes=5)
+
+        self.assertEqual(window_index["window_start"].tolist(), [pd.Timestamp("2024-01-01 06:00:00")])
 
 
 class RoutineScoringTests(unittest.TestCase):
@@ -93,6 +105,27 @@ class RoutineScoringTests(unittest.TestCase):
         self.assertTrue(bool(inactive_row["is_inactivity_cluster"]))
         self.assertEqual(inactive_row["level"], "MONITOR")
 
+    def test_routine_scores_handle_midnight_wrapping_as_consistent(self) -> None:
+        daily = pd.DataFrame(
+            {
+                "date": [pd.to_datetime("2024-01-01").date(), pd.to_datetime("2024-01-02").date()],
+                "cluster": [0, 0],
+                "windows": [1, 1],
+                "mean_hour": [23.9, 0.1],
+                "peak_hour": [0.0, 0.0],
+                "total_events": [10.0, 12.0],
+                "mean_events_per_window": [10.0, 12.0],
+                "mean_unique_sensors": [2.0, 2.0],
+            }
+        )
+
+        scored = compute_routine_scores(daily)
+        row = scored.iloc[0]
+
+        self.assertAlmostEqual(float(row["avg_peak_hour"]), 0.0, places=6)
+        self.assertAlmostEqual(float(row["std_peak_hour"]), 0.0, places=6)
+        self.assertGreater(float(row["time_consistency"]), 0.99)
+
     def test_inactivity_cluster_profiles_use_no_active_sensor_label(self) -> None:
         df = pd.DataFrame(
             {
@@ -115,6 +148,26 @@ class RoutineScoringTests(unittest.TestCase):
 
         self.assertEqual(profiles[0].top_sensor, INACTIVE_SENSOR_LABEL)
         self.assertEqual(profiles[1].top_sensor, "Kitchen")
+
+    def test_cluster_profile_peak_hour_wraps_around_midnight(self) -> None:
+        df = pd.DataFrame(
+            {
+                "window_start": pd.to_datetime(
+                    [
+                        "2024-01-01 23:55:00",
+                        "2024-01-02 00:00:00",
+                    ]
+                ),
+                "cluster": [0, 0],
+                "Kitchen": [1.0, 1.0],
+                "total_events": [1.0, 1.0],
+                "n_sensors_active": [1.0, 1.0],
+            }
+        )
+
+        profiles = build_cluster_profiles(df, sensor_cols=["Kitchen"])
+
+        self.assertEqual(profiles[0].peak_hour, 0.0)
 
 
 class PipelineDefaultTests(unittest.TestCase):

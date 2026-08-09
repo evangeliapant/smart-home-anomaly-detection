@@ -23,7 +23,7 @@ def build_window_index(events: pd.DataFrame, window_minutes: int) -> pd.DataFram
         raise ValueError("events must contain 'timestamp'")
 
     t0 = events["timestamp"].min().floor(f"{window_minutes}min")
-    t1 = events["timestamp"].max().ceil(f"{window_minutes}min")
+    t1 = events["timestamp"].max().floor(f"{window_minutes}min")
 
     # full range of windows
     window_start = pd.date_range(start=t0, end=t1, freq=f"{window_minutes}min")

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+import numpy as np
 import pandas as pd
 
 
@@ -42,6 +43,7 @@ class ClusterProfile:
 
 
 INACTIVE_SENSOR_LABEL = "No active sensor"
+HOURS_PER_DAY = 24.0
 
 
 def _ensure_datetime(df: pd.DataFrame, time_col: str = "window_start") -> pd.DataFrame:
@@ -49,6 +51,13 @@ def _ensure_datetime(df: pd.DataFrame, time_col: str = "window_start") -> pd.Dat
     out[time_col] = pd.to_datetime(out[time_col], errors="coerce")
     out = out.dropna(subset=[time_col])
     return out
+
+
+def _rounded_hour_mode(values: pd.Series) -> float:
+    rounded = np.mod(np.round(values.astype(float).to_numpy()), HOURS_PER_DAY)
+    if len(rounded) == 0:
+        return float("nan")
+    return float(pd.Series(rounded).mode().iloc[0])
 
 
 def infer_sensor_columns(df: pd.DataFrame) -> List[str]:
@@ -127,7 +136,7 @@ def build_cluster_profiles(
         is_inactivity_cluster = inactive_window_fraction >= inactivity_threshold
 
         # Robust peak hour
-        peak_hour = float(ref["hour"].round().mode().iloc[0]) if len(ref) else float("nan")
+        peak_hour = _rounded_hour_mode(ref["hour"]) if len(ref) else float("nan")
 
         # Top sensor by mean count
         sensor_means = ref[sensor_cols].mean(numeric_only=True)

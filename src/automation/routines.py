@@ -4,6 +4,45 @@ import numpy as np
 import pandas as pd
 
 
+HOURS_PER_DAY = 24.0
+
+
+def _normalize_hours(values: pd.Series | np.ndarray) -> np.ndarray:
+    arr = np.asarray(values, dtype=float)
+    return np.mod(arr, HOURS_PER_DAY)
+
+
+def _rounded_hour_mode(values: pd.Series) -> float:
+    rounded = _normalize_hours(np.round(values.astype(float).to_numpy()))
+    if len(rounded) == 0:
+        return float("nan")
+    return float(pd.Series(rounded).mode().iloc[0])
+
+
+def _circular_mean_hour(values: pd.Series) -> float:
+    hours = _normalize_hours(values.astype(float).to_numpy())
+    if len(hours) == 0:
+        return float("nan")
+
+    angles = hours / HOURS_PER_DAY * 2 * np.pi
+    mean_sin = np.sin(angles).mean()
+    mean_cos = np.cos(angles).mean()
+    angle = np.arctan2(mean_sin, mean_cos)
+    if angle < 0:
+        angle += 2 * np.pi
+    return float(angle / (2 * np.pi) * HOURS_PER_DAY)
+
+
+def _circular_std_hour(values: pd.Series) -> float:
+    hours = _normalize_hours(values.astype(float).to_numpy())
+    if len(hours) < 2:
+        return 0.0
+
+    mean_hour = _circular_mean_hour(pd.Series(hours))
+    deltas = ((hours - mean_hour + HOURS_PER_DAY / 2) % HOURS_PER_DAY) - HOURS_PER_DAY / 2
+    return float(np.std(deltas, ddof=1))
+
+
 def compute_cluster_daily_stats(
     df: pd.DataFrame,
     active_only: bool = True,
@@ -46,7 +85,7 @@ def compute_cluster_daily_stats(
         .agg(
             windows=("cluster", "size"),
             mean_hour=("hour", "mean"),
-            peak_hour=("hour", lambda s: float(s.round().mode().iloc[0])),
+            peak_hour=("hour", _rounded_hour_mode),
             total_events=("total_events", "sum"),
             mean_events_per_window=("total_events", "mean"),
             mean_unique_sensors=("n_sensors_active", "mean"),
@@ -88,8 +127,8 @@ def compute_routine_scores(daily: pd.DataFrame) -> pd.DataFrame:
         daily.groupby("cluster")
         .agg(
             active_days=("date", "nunique"),
-            avg_peak_hour=("peak_hour", "mean"),
-            std_peak_hour=("peak_hour", "std"),
+            avg_peak_hour=("peak_hour", _circular_mean_hour),
+            std_peak_hour=("peak_hour", _circular_std_hour),
             avg_windows_per_day=("windows", "mean"),
             avg_events_per_day=("total_events", "mean"),
             avg_unique_sensors=("mean_unique_sensors", "mean"),
@@ -98,7 +137,6 @@ def compute_routine_scores(daily: pd.DataFrame) -> pd.DataFrame:
     )
 
     per_cluster["frequency"] = per_cluster["active_days"] / max(n_days, 1)
-    per_cluster["std_peak_hour"] = per_cluster["std_peak_hour"].fillna(0.0)
     per_cluster["time_consistency"] = 1.0 - np.clip(per_cluster["std_peak_hour"] / 4.0, 0, 1)
     per_cluster["stability_score"] = 0.6 * per_cluster["frequency"] + 0.4 * per_cluster["time_consistency"]
 

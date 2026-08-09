@@ -4,35 +4,13 @@ This report summarizes the per-home results generated from the project pipeline 
 
 The modeled outputs in this report were generated with `60`-minute windows.
 
-## How to Read This Report
-
-This report is meant to be read in four layers:
-
-1. `Cluster Summary` shows the recurring window types discovered by unsupervised clustering.
-2. `Routine Stability` shows which of those clusters recur consistently across days.
-3. `Automation Suggestions` shows which stable routines are strong enough to justify a conservative action suggestion.
-4. `Top Anomaly Windows` shows unusual windows that differ from the learned behavior patterns.
-
-Important note: a **cluster** is not a manually labeled human activity such as "cooking" or "sleeping". It is a data-driven behavioral pattern inferred from sensor counts, activity intensity, and time-of-day.
-
-## Executive Summary
-
-Across both homes, the pipeline succeeds in:
-
-- separating inactivity from active behavior,
-- discovering interpretable room-centered or multi-room hourly routines,
-- flagging unusually intense hours as anomalies,
-- and generating conservative smart-home suggestions only for stable patterns.
-
-The key tradeoff of this branch is that the hourly configuration is easier to interpret than the 5-minute configuration, but it smooths short-lived events into broader hourly behavior blocks.
-
 ## HH101
 
 - Raw events: `1,286,244`
 - Window size: `60` minutes
-- Modeled windows: `8,929`
+- Modeled windows: `8,928`
 - Active windows: `7,654`
-- Inactive windows: `1,275`
+- Inactive windows: `1,274`
 - Detected anomalies: `179`
 - Sensor features: `Bathroom, Bedroom, DiningRoom, Kitchen, LivingRoom, OutsideDoor`
 
@@ -40,40 +18,40 @@ The key tradeoff of this branch is that the hourly configuration is easier to in
 
 | cluster | n_windows | mean_total_events | mean_unique_sensors | inactive_fraction | peak_hour | top_sensor_1 | top_sensor_2 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 0 | 2123 | 41.028 | 1.484 | 0.0 | 4.0 | LivingRoom | Bedroom |
-| 1 | 698 | 396.656 | 4.501 | 0.0 | 9.0 | Kitchen | LivingRoom |
-| 2 | 2016 | 48.741 | 1.589 | 0.0 | 20.0 | LivingRoom | Bedroom |
-| 3 | 1275 | 0.0 | 0.0 | 1.0 | 18.0 | No active sensor |  |
-| 4 | 504 | 612.524 | 5.139 | 0.0 | 11.0 | Bedroom | Bathroom |
-| 5 | 2313 | 222.785 | 4.823 | 0.0 | 17.0 | LivingRoom | Bedroom |
+| 0 | 2295 | 74.098 | 2.067 | 0.0 | 20.0 | LivingRoom | Kitchen |
+| 1 | 1991 | 245.748 | 5.069 | 0.0 | 8.0 | LivingRoom | Bedroom |
+| 2 | 478 | 619.596 | 5.119 | 0.0 | 11.0 | Bedroom | Bathroom |
+| 3 | 2210 | 28.014 | 1.315 | 0.0 | 4.0 | Bedroom | LivingRoom |
+| 4 | 1274 | 0.0 | 0.0 | 1.0 | 18.0 | No active sensor |  |
+| 5 | 680 | 395.328 | 4.488 | 0.0 | 9.0 | Kitchen | LivingRoom |
 
 ### Routine Stability
 
 | cluster | frequency | avg_peak_hour | std_peak_hour | stability_score |
 | --- | --- | --- | --- | --- |
-| 1 | 0.925 | 9.157 | 2.249 | 0.73 |
-| 0 | 0.569 | 0.635 | 0.953 | 0.646 |
-| 5 | 0.987 | 5.191 | 3.624 | 0.63 |
-| 4 | 0.943 | 9.72 | 3.643 | 0.602 |
+| 3 | 0.992 | 0.8 | 1.084 | 0.887 |
+| 5 | 0.922 | 8.973 | 2.201 | 0.733 |
+| 0 | 0.995 | 12.928 | 3.371 | 0.66 |
+| 1 | 0.984 | 5.108 | 3.597 | 0.631 |
 
 ### Automation Suggestions
 
 | cluster | top_sensor | avg_peak_hour | frequency | stability_score | level | suggestion |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Kitchen | 9.157 | 0.925 | 0.73 | RECOMMEND | RECOMMEND: recurring kitchen activity around 9.2h -> suggest ventilation/heating pre-adjustment |
-| 0 | LivingRoom | 0.635 | 0.569 | 0.646 | MONITOR | No suggestion |
-| 5 | LivingRoom | 5.191 | 0.987 | 0.63 | RECOMMEND | RECOMMEND: recurring living-room presence around 5.2h -> suggest comfort lighting/heating |
-| 4 | Bedroom | 9.72 | 0.943 | 0.602 | RECOMMEND | RECOMMEND: recurring bedroom routine around 9.7h -> suggest comfort/heating adjustment |
+| 3 | Bedroom | 0.8 | 0.992 | 0.887 | AUTO | AUTO: recurring bedroom routine around 0.8h -> suggest comfort/heating adjustment |
+| 5 | Kitchen | 8.973 | 0.922 | 0.733 | RECOMMEND | RECOMMEND: recurring kitchen activity around 9.0h -> suggest ventilation/heating pre-adjustment |
+| 0 | LivingRoom | 12.928 | 0.995 | 0.66 | RECOMMEND | RECOMMEND: recurring living-room presence around 12.9h -> suggest comfort lighting/heating |
+| 1 | LivingRoom | 5.108 | 0.984 | 0.631 | RECOMMEND | RECOMMEND: recurring living-room presence around 5.1h -> suggest comfort lighting/heating |
 
 ### Top Anomaly Windows
 
 | window_start | cluster | total_events | n_sensors_active | anomaly_score | explanation |
 | --- | --- | --- | --- | --- | --- |
-| 2012-07-20 11:00:00 | 1 | 1596.0 | 6.0 | -0.106 | Unusually high event rate (burst of activity) |
-| 2012-10-24 13:00:00 | 1 | 982.0 | 6.0 | -0.103 | Unusually high event rate (burst of activity) |
-| 2012-09-06 11:00:00 | 1 | 1115.0 | 5.0 | -0.096 | Unusually high event rate (burst of activity) |
-| 2013-01-17 10:00:00 | 1 | 763.0 | 6.0 | -0.09 | Unusually high event rate (burst of activity) |
-| 2012-10-04 13:00:00 | 1 | 744.0 | 6.0 | -0.083 | Unusually high event rate (burst of activity) |
+| 2012-10-24 13:00:00 | 5 | 982.0 | 6.0 | -0.113 | Unusually intense multi-room activity for this home |
+| 2012-07-20 11:00:00 | 1 | 1596.0 | 6.0 | -0.085 | Unusually intense multi-room activity for this home |
+| 2012-10-17 17:00:00 | 5 | 820.0 | 5.0 | -0.084 | Dense burst of repeated activity in a small set of sensors |
+| 2013-05-12 10:00:00 | 2 | 972.0 | 6.0 | -0.081 | Unusually intense multi-room activity for this home |
+| 2013-01-17 10:00:00 | 5 | 763.0 | 6.0 | -0.074 | Unusually intense multi-room activity for this home |
 
 ### Key Visuals
 
@@ -86,9 +64,9 @@ The key tradeoff of this branch is that the hourly configuration is easier to in
 
 - Raw events: `4,840,159`
 - Window size: `60` minutes
-- Modeled windows: `24,880`
+- Modeled windows: `24,879`
 - Active windows: `17,907`
-- Inactive windows: `6,973`
+- Inactive windows: `6,972`
 - Detected anomalies: `498`
 - Sensor features: `Bathroom, Bedroom, DiningRoom, Kitchen, LivingRoom, OutsideDoor, WorkArea`
 
@@ -96,40 +74,40 @@ The key tradeoff of this branch is that the hourly configuration is easier to in
 
 | cluster | n_windows | mean_total_events | mean_unique_sensors | inactive_fraction | peak_hour | top_sensor_1 | top_sensor_2 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 0 | 6973 | 0.0 | 0.0 | 1.0 | 1.0 | No active sensor |  |
-| 1 | 1924 | 617.729 | 5.694 | 0.0 | 18.0 | Kitchen | LivingRoom |
-| 2 | 4428 | 333.697 | 6.176 | 0.0 | 8.0 | LivingRoom | Bedroom |
-| 3 | 5396 | 52.71 | 1.918 | 0.0 | 23.0 | Bedroom | Bathroom |
-| 4 | 1959 | 739.271 | 5.909 | 0.0 | 21.0 | Bathroom | Bedroom |
-| 5 | 4200 | 104.659 | 3.142 | 0.0 | 16.0 | Kitchen | LivingRoom |
+| 0 | 6972 | 0.0 | 0.0 | 1.0 | 1.0 | No active sensor |  |
+| 1 | 1992 | 622.616 | 5.623 | 0.0 | 21.0 | Bathroom | Bedroom |
+| 2 | 561 | 953.667 | 6.715 | 0.0 | 14.0 | LivingRoom | WorkArea |
+| 3 | 7433 | 46.447 | 1.881 | 0.0 | 23.0 | Bedroom | Bathroom |
+| 4 | 1945 | 588.77 | 5.616 | 0.0 | 18.0 | Kitchen | DiningRoom |
+| 5 | 5976 | 263.167 | 5.614 | 0.0 | 15.0 | LivingRoom | Kitchen |
 
 ### Routine Stability
 
 | cluster | frequency | avg_peak_hour | std_peak_hour | stability_score |
 | --- | --- | --- | --- | --- |
-| 3 | 0.988 | 1.223 | 2.366 | 0.756 |
-| 5 | 0.971 | 11.082 | 2.464 | 0.736 |
-| 2 | 0.965 | 8.08 | 2.723 | 0.707 |
-| 4 | 0.842 | 11.656 | 4.154 | 0.505 |
+| 3 | 0.998 | 1.02 | 1.924 | 0.806 |
+| 5 | 0.97 | 7.862 | 2.367 | 0.745 |
+| 1 | 0.867 | 10.748 | 4.178 | 0.52 |
+| 4 | 0.785 | 13.888 | 3.862 | 0.485 |
 
 ### Automation Suggestions
 
 | cluster | top_sensor | avg_peak_hour | frequency | stability_score | level | suggestion |
 | --- | --- | --- | --- | --- | --- | --- |
-| 3 | Bedroom | 1.223 | 0.988 | 0.756 | RECOMMEND | RECOMMEND: recurring bedroom routine around 1.2h -> suggest comfort/heating adjustment |
-| 5 | Kitchen | 11.082 | 0.971 | 0.736 | RECOMMEND | RECOMMEND: recurring kitchen activity around 11.1h -> suggest ventilation/heating pre-adjustment |
-| 2 | LivingRoom | 8.08 | 0.965 | 0.707 | RECOMMEND | RECOMMEND: recurring living-room presence around 8.1h -> suggest comfort lighting/heating |
-| 4 | Bathroom | 11.656 | 0.842 | 0.505 | MONITOR | No suggestion |
+| 3 | Bedroom | 1.02 | 0.998 | 0.806 | AUTO | AUTO: recurring bedroom routine around 1.0h -> suggest comfort/heating adjustment |
+| 5 | LivingRoom | 7.862 | 0.97 | 0.745 | RECOMMEND | RECOMMEND: recurring living-room presence around 7.9h -> suggest comfort lighting/heating |
+| 1 | Bathroom | 10.748 | 0.867 | 0.52 | MONITOR | No suggestion |
+| 4 | Kitchen | 13.888 | 0.785 | 0.485 | MONITOR | No suggestion |
 
 ### Top Anomaly Windows
 
 | window_start | cluster | total_events | n_sensors_active | anomaly_score | explanation |
 | --- | --- | --- | --- | --- | --- |
-| 2011-11-28 13:00:00 | 4 | 2864.0 | 7.0 | -0.145 | Unusually high event rate (burst of activity) |
-| 2012-12-24 14:00:00 | 4 | 2239.0 | 7.0 | -0.138 | Unusually high event rate (burst of activity) |
-| 2013-05-27 13:00:00 | 4 | 1952.0 | 6.0 | -0.129 | Unusually high event rate (burst of activity) |
-| 2013-08-05 14:00:00 | 4 | 1874.0 | 7.0 | -0.126 | Unusually high event rate (burst of activity) |
-| 2013-11-25 13:00:00 | 1 | 1787.0 | 7.0 | -0.126 | Unusually high event rate (burst of activity) |
+| 2011-11-28 13:00:00 | 2 | 2864.0 | 7.0 | -0.114 | Unusually intense multi-room activity for this home |
+| 2012-12-24 14:00:00 | 2 | 2239.0 | 7.0 | -0.107 | Unusually intense multi-room activity for this home |
+| 2012-08-09 16:00:00 | 2 | 1907.0 | 7.0 | -0.102 | Unusually intense multi-room activity for this home |
+| 2012-08-05 10:00:00 | 2 | 1961.0 | 7.0 | -0.102 | Unusually intense multi-room activity for this home |
+| 2012-11-28 13:00:00 | 2 | 2022.0 | 7.0 | -0.101 | Unusually intense multi-room activity for this home |
 
 ### Key Visuals
 

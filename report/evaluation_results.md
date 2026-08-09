@@ -4,6 +4,28 @@ This report summarizes the per-home results generated from the project pipeline 
 
 The modeled outputs in this report were generated with `60`-minute windows.
 
+## How to Read This Report
+
+This report is meant to be read in four layers:
+
+1. `Cluster Summary` shows the recurring window types discovered by unsupervised clustering.
+2. `Routine Stability` shows which of those clusters recur consistently across days.
+3. `Automation Suggestions` shows which stable routines are strong enough to justify a conservative action suggestion.
+4. `Top Anomaly Windows` shows unusual windows that differ from the learned behavior patterns.
+
+Important note: a **cluster** is not a manually labeled human activity such as "cooking" or "sleeping". It is a data-driven behavioral pattern inferred from sensor counts, activity intensity, and time-of-day.
+
+## Executive Summary
+
+Across both homes, the pipeline succeeds in:
+
+- separating inactivity from active behavior,
+- discovering interpretable room-centered or multi-room hourly routines,
+- flagging unusually intense hours as anomalies,
+- and generating conservative smart-home suggestions only for stable patterns.
+
+The key tradeoff of this branch is that the hourly configuration is easier to interpret than the 5-minute configuration, but it smooths short-lived events into broader hourly behavior blocks.
+
 ## HH101
 
 - Raw events: `1,286,244`

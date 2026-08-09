@@ -6,7 +6,12 @@ from pathlib import Path
 import pandas as pd
 
 from src.automation.routines import compute_cluster_daily_stats, compute_routine_scores, suggest_automations
-from src.automation.simulator import build_cluster_profiles, explain_anomaly, infer_sensor_columns
+from src.automation.simulator import (
+    build_anomaly_explanation_context,
+    build_cluster_profiles,
+    explain_anomaly,
+    infer_sensor_columns,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -62,6 +67,7 @@ def build_house_section(house: str, window_minutes: int) -> str:
     df["window_start"] = pd.to_datetime(df["window_start"], errors="coerce")
     df = df.dropna(subset=["window_start"]).copy()
     df["is_anomaly"] = df["is_anomaly"].astype(str).str.lower().isin({"true", "1", "yes"})
+    anomaly_context = build_anomaly_explanation_context(df)
 
     sensor_cols = infer_sensor_columns(df)
     profiles = build_cluster_profiles(df, sensor_cols=sensor_cols)
@@ -79,7 +85,10 @@ def build_house_section(house: str, window_minutes: int) -> str:
         .copy()
     )
     if not anomaly_examples.empty:
-        anomaly_examples["explanation"] = anomaly_examples.apply(explain_anomaly, axis=1)
+        anomaly_examples["explanation"] = anomaly_examples.apply(
+            lambda row: explain_anomaly(row, context=anomaly_context),
+            axis=1,
+        )
         anomaly_examples = anomaly_examples[
             ["window_start", "cluster", "total_events", "n_sensors_active", "anomaly_score", "explanation"]
         ]

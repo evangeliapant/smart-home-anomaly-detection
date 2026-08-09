@@ -9,7 +9,67 @@ import pandas as pd
 
 # --------- Anomaly explanation (still simple but useful) ---------
 
-def explain_anomaly(row: pd.Series) -> str:
+@dataclass(frozen=True)
+class AnomalyExplanationContext:
+    high_total_threshold: float
+    moderate_total_threshold: float
+    multi_sensor_threshold: float
+    high_density_threshold: float
+
+
+def build_anomaly_explanation_context(df: pd.DataFrame) -> AnomalyExplanationContext:
+    """
+    Build dataset-relative thresholds so anomaly explanations scale with
+    the observed home and the chosen window size.
+    """
+    active = df[df["total_events"] > 0].copy() if "total_events" in df.columns else pd.DataFrame()
+    if active.empty:
+        return AnomalyExplanationContext(
+            high_total_threshold=150.0,
+            moderate_total_threshold=50.0,
+            multi_sensor_threshold=6.0,
+            high_density_threshold=25.0,
+        )
+
+    total_events = active["total_events"].astype(float)
+    n_sensors = active["n_sensors_active"].astype(float) if "n_sensors_active" in active.columns else pd.Series(
+        np.ones(len(active)),
+        index=active.index,
+    )
+    density = total_events / np.maximum(n_sensors.to_numpy(dtype=float), 1.0)
+
+    high_total_threshold = max(
+        float(total_events.quantile(0.95)),
+        float(total_events.median() * 2.0),
+        1.0,
+    )
+    moderate_total_threshold = max(
+        float(total_events.quantile(0.80)),
+        float(total_events.median() * 1.5),
+        1.0,
+    )
+    multi_sensor_threshold = max(
+        2.0,
+        float(np.ceil(n_sensors.quantile(0.90))),
+    )
+    high_density_threshold = max(
+        float(np.quantile(density, 0.90)),
+        float(np.median(density) * 1.5),
+        1.0,
+    )
+
+    return AnomalyExplanationContext(
+        high_total_threshold=high_total_threshold,
+        moderate_total_threshold=moderate_total_threshold,
+        multi_sensor_threshold=multi_sensor_threshold,
+        high_density_threshold=high_density_threshold,
+    )
+
+
+def explain_anomaly(
+    row: pd.Series,
+    context: AnomalyExplanationContext | None = None,
+) -> str:
     """
     Human-readable explanation of why a window might be anomalous.
     This is intentionally conservative (no medical claims).
@@ -19,10 +79,28 @@ def explain_anomaly(row: pd.Series) -> str:
 
     if total == 0:
         return "No activity in this window (normal if short)"
-    if total > 150:
-        return "Unusually high event rate (burst of activity)"
-    if uniq >= 6:
-        return "Many sensors active in a short period (multi-room activity)"
+
+    if context is None:
+        context = AnomalyExplanationContext(
+            high_total_threshold=150.0,
+            moderate_total_threshold=50.0,
+            multi_sensor_threshold=6.0,
+            high_density_threshold=25.0,
+        )
+
+    density = total / max(uniq, 1.0)
+    high_total = total >= context.high_total_threshold
+    high_sensor_spread = uniq >= context.multi_sensor_threshold
+    high_density = density >= context.high_density_threshold and total >= context.moderate_total_threshold
+
+    if high_total and high_sensor_spread:
+        return "Unusually intense multi-room activity for this home"
+    if high_density:
+        return "Dense burst of repeated activity in a small set of sensors"
+    if high_total:
+        return "Unusually high event volume for this home"
+    if high_sensor_spread:
+        return "More rooms or sensors active than usual in one window"
     return "Unusual pattern (model-based)"
 
 

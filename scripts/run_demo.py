@@ -11,6 +11,7 @@ from src.automation.routines import (
     suggest_automations,
 )
 from src.automation.simulator import (
+    build_anomaly_explanation_context,
     build_cluster_profiles,
     explain_anomaly,
     infer_sensor_columns,
@@ -64,6 +65,7 @@ def main() -> None:
 
     df = pd.read_csv(input_path)
     df["is_anomaly"] = _coerce_bool(df["is_anomaly"])
+    anomaly_context = build_anomaly_explanation_context(df)
 
     inactive_windows = int((df["total_events"] == 0).sum())
     print(
@@ -76,7 +78,7 @@ def main() -> None:
 
     print(f"\nTop {args.top_n} anomalies:")
     for _, r in anomalies.iterrows():
-        print(r["window_start"], "-", explain_anomaly(r))
+        print(r["window_start"], "-", explain_anomaly(r, context=anomaly_context))
 
     sensor_cols = infer_sensor_columns(df)
     profiles = build_cluster_profiles(df, sensor_cols=sensor_cols)

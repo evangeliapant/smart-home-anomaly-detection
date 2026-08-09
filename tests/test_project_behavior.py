@@ -10,7 +10,12 @@ import pandas as pd
 
 from scripts.run_pipeline import resolve_raw_path
 from src.automation.routines import compute_cluster_daily_stats, compute_routine_scores, suggest_automations
-from src.automation.simulator import INACTIVE_SENSOR_LABEL, build_cluster_profiles
+from src.automation.simulator import (
+    INACTIVE_SENSOR_LABEL,
+    build_anomaly_explanation_context,
+    build_cluster_profiles,
+    explain_anomaly,
+)
 from src.features.build_features import build_window_features
 from src.features.windowing import build_window_index
 from src.models.clustering import fit_kmeans
@@ -168,6 +173,40 @@ class RoutineScoringTests(unittest.TestCase):
         profiles = build_cluster_profiles(df, sensor_cols=["Kitchen"])
 
         self.assertEqual(profiles[0].peak_hour, 0.0)
+
+
+class AnomalyExplanationTests(unittest.TestCase):
+    def test_anomaly_explanations_scale_with_dataset_context(self) -> None:
+        df = pd.DataFrame(
+            {
+                "total_events": [10.0, 12.0, 14.0, 18.0, 20.0, 240.0],
+                "n_sensors_active": [1.0, 1.0, 2.0, 2.0, 2.0, 6.0],
+            }
+        )
+
+        context = build_anomaly_explanation_context(df)
+        explanation = explain_anomaly(
+            pd.Series({"total_events": 240.0, "n_sensors_active": 6.0}),
+            context=context,
+        )
+
+        self.assertIn("multi-room", explanation.lower())
+
+    def test_anomaly_explanations_detect_dense_single_sensor_burst(self) -> None:
+        df = pd.DataFrame(
+            {
+                "total_events": [5.0, 6.0, 7.0, 8.0, 9.0, 45.0],
+                "n_sensors_active": [2.0, 2.0, 2.0, 2.0, 2.0, 1.0],
+            }
+        )
+
+        context = build_anomaly_explanation_context(df)
+        explanation = explain_anomaly(
+            pd.Series({"total_events": 45.0, "n_sensors_active": 1.0}),
+            context=context,
+        )
+
+        self.assertIn("dense burst", explanation.lower())
 
 
 class PipelineDefaultTests(unittest.TestCase):

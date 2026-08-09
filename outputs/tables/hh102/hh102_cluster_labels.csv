@@ -1,0 +1,7 @@
+cluster,routine_label,inactive_fraction,peak_hour,top_sensor_1,top_sensor_2
+0,Night inactivity,0.9554765651343149,4.0,Bedroom,WorkArea
+1,Evening Kitchen + DiningRoom routine,0.0,19.0,Kitchen,DiningRoom
+2,Midday multi-room routine,0.0,14.0,LivingRoom,WorkArea
+3,Evening Bathroom + Bedroom routine,0.0,21.0,Bathroom,Bedroom
+4,Midday LivingRoom + Bedroom routine,0.5413624319896442,16.0,LivingRoom,Bedroom
+5,Night inactivity,0.9542701310091541,2.0,Bedroom,WorkArea

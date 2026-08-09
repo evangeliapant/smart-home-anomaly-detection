@@ -4,7 +4,7 @@
 
 CLUSTER 0
 active_window_count = 0
-total_window_count = 27669
+total_window_count = 27668
 inactive_window_fraction = 1.00
 is_inactivity_cluster = True
 mean_hour = 16.83

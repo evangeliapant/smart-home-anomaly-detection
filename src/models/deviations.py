@@ -22,6 +22,7 @@ def build_significant_deviation_table(
     z_threshold: float = 3.5,
     min_history_windows: int = 7,
     min_difference_events: float = 3.0,
+    tail_quantile: float = 0.995,
 ) -> pd.DataFrame:
     """Return one row for every significant sensor deviation.
 
@@ -29,9 +30,11 @@ def build_significant_deviation_table(
     a median/MAD statistic.  Consequently, a sensor which is normally very
     active at (for example) 08:00 does not alert just because it has a large
     raw event count. A material excess (high deviation) or shortfall (low
-    deviation) outside its own historical range is retained. The report keeps
-    the original sensor name so the result remains easy to interpret for the
-    current datasets.
+    deviation) outside its own historical range is retained. In addition to
+    the robust-score rule, the event count must be in the most extreme 0.5%
+    of that sensor/hour's observed history. This prevents routine variation
+    from producing excessive alerts. The report keeps the original sensor name
+    so the result remains easy to interpret for the current datasets.
     """
     required = {"window_start", *sensor_cols}
     missing = required.difference(features.columns)
@@ -39,6 +42,8 @@ def build_significant_deviation_table(
         raise ValueError(f"Features are missing required columns: {sorted(missing)}")
     if not sensor_cols:
         raise ValueError("At least one sensor column is required")
+    if not 0.5 < tail_quantile < 1.0:
+        raise ValueError("tail_quantile must be between 0.5 and 1.0")
 
     wide = features[["window_start", *sensor_cols]].copy()
     wide["window_start"] = pd.to_datetime(wide["window_start"], errors="coerce")
@@ -56,6 +61,10 @@ def build_significant_deviation_table(
     baseline = grouped.agg(history_windows="size", expected_events="median").reset_index()
     mad = grouped.apply(lambda values: float(np.median(np.abs(values - np.median(values))))).rename("mad")
     baseline = baseline.merge(mad.reset_index(), on=["sensor_name", "hour"], how="left")
+    empirical_high = grouped.quantile(tail_quantile).rename("empirical_high_threshold")
+    empirical_low = grouped.quantile(1.0 - tail_quantile).rename("empirical_low_threshold")
+    baseline = baseline.merge(empirical_high.reset_index(), on=["sensor_name", "hour"], how="left")
+    baseline = baseline.merge(empirical_low.reset_index(), on=["sensor_name", "hour"], how="left")
 
     # A zero MAD is common for sparse event counts.  The Poisson-like fallback
     # keeps the threshold meaningful without treating routine zero/one counts
@@ -65,9 +74,13 @@ def build_significant_deviation_table(
     baseline["robust_scale"] = baseline["robust_scale"].where(
         baseline["robust_scale"] > 0, fallback_scale
     )
-    baseline["high_alert_threshold"] = baseline["expected_events"] + z_threshold * baseline["robust_scale"]
-    baseline["low_alert_threshold"] = np.maximum(
-        baseline["expected_events"] - z_threshold * baseline["robust_scale"], 0.0
+    baseline["high_alert_threshold"] = np.maximum(
+        baseline["expected_events"] + z_threshold * baseline["robust_scale"],
+        baseline["empirical_high_threshold"],
+    )
+    baseline["low_alert_threshold"] = np.minimum(
+        np.maximum(baseline["expected_events"] - z_threshold * baseline["robust_scale"], 0.0),
+        baseline["empirical_low_threshold"],
     )
 
     table = long.merge(baseline, on=["sensor_name", "hour"], how="left")
@@ -79,11 +92,13 @@ def build_significant_deviation_table(
         has_enough_history
         & (table["signed_difference_events"] >= min_difference_events)
         & (table["deviation_score"] >= z_threshold)
+        & (table["observed_events"] >= table["high_alert_threshold"])
     )
     low_deviation = (
         has_enough_history
         & (table["signed_difference_events"] <= -min_difference_events)
         & (table["deviation_score"] <= -z_threshold)
+        & (table["observed_events"] <= table["low_alert_threshold"])
     )
     significant = table[high_deviation | low_deviation].copy()
     significant["alert"] = np.where(

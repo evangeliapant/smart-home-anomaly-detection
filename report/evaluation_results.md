@@ -12,7 +12,8 @@ The modeled outputs in this report were generated with `60`-minute windows.
 - Active windows: `7,654`
 - Inactive windows: `1,274`
 - Detected anomalies: `179`
-- Sensor features: `Bathroom, Bedroom, DiningRoom, Kitchen, LivingRoom, OutsideDoor`
+- Significant sensor-deviation alerts: `312`
+- Sensor features: `Bathroom, Bedroom, DiningRoom, Kitchen, LivingRoom, OutsideDoor, has_significant_deviation`
 
 ### Cluster Summary
 
@@ -53,6 +54,23 @@ The modeled outputs in this report were generated with `60`-minute windows.
 | 2013-05-12 10:00:00 | 2 | 972.0 | 6.0 | -0.081 | Unusually intense multi-room activity for this home |
 | 2013-01-17 10:00:00 | 5 | 763.0 | 6.0 | -0.074 | Unusually intense multi-room activity for this home |
 
+### Significant Sensor Deviations
+
+These alerts compare each sensor with its own historical activity at the same hour. They include unusually high and unusually low activity; a high-use sensor does not alert merely because it is frequently active.
+
+| window_start | sensor_name | observed_events | expected_events | low_alert_threshold | high_alert_threshold | deviation_events | deviation_score | history_windows | alert |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2013-05-13 11:00:00 | Bedroom | 1785.0 | 4.0 | 0.0 | 676.13 | 1781.0 | 300.317 | 372 | HIGH_DEVIATION |
+| 2012-09-12 11:00:00 | Bedroom | 1526.0 | 4.0 | 0.0 | 676.13 | 1522.0 | 256.644 | 372 | HIGH_DEVIATION |
+| 2012-07-29 21:00:00 | Bedroom | 1486.0 | 0.0 | 0.0 | 867.99 | 1486.0 | 1486.0 | 372 | HIGH_DEVIATION |
+| 2013-07-02 08:00:00 | Bedroom | 1483.0 | 4.0 | 0.0 | 302.87 | 1479.0 | 249.393 | 372 | HIGH_DEVIATION |
+| 2012-09-12 21:00:00 | Bedroom | 1434.0 | 0.0 | 0.0 | 867.99 | 1434.0 | 1434.0 | 372 | HIGH_DEVIATION |
+| 2012-07-28 15:00:00 | Bedroom | 1127.0 | 0.0 | 0.0 | 758.61 | 1127.0 | 1127.0 | 372 | HIGH_DEVIATION |
+| 2012-09-07 10:00:00 | Bedroom | 1078.0 | 0.0 | 0.0 | 602.52 | 1078.0 | 1078.0 | 372 | HIGH_DEVIATION |
+| 2012-07-28 20:00:00 | Bedroom | 1066.0 | 0.0 | 0.0 | 369.51 | 1066.0 | 1066.0 | 372 | HIGH_DEVIATION |
+| 2012-08-15 09:00:00 | Bedroom | 1062.0 | 2.0 | 0.0 | 609.795 | 1060.0 | 357.48 | 372 | HIGH_DEVIATION |
+| 2012-09-17 12:00:00 | Bedroom | 1040.0 | 2.0 | 0.0 | 591.525 | 1038.0 | 350.061 | 372 | HIGH_DEVIATION |
+
 ### Key Visuals
 
 - `outputs\figures\hh101\hh101_events_per_day.png`
@@ -68,7 +86,8 @@ The modeled outputs in this report were generated with `60`-minute windows.
 - Active windows: `17,907`
 - Inactive windows: `6,972`
 - Detected anomalies: `498`
-- Sensor features: `Bathroom, Bedroom, DiningRoom, Kitchen, LivingRoom, OutsideDoor, WorkArea`
+- Significant sensor-deviation alerts: `1,083`
+- Sensor features: `Bathroom, Bedroom, DiningRoom, Kitchen, LivingRoom, OutsideDoor, WorkArea, has_significant_deviation`
 
 ### Cluster Summary
 
@@ -108,6 +127,23 @@ The modeled outputs in this report were generated with `60`-minute windows.
 | 2012-08-09 16:00:00 | 2 | 1907.0 | 7.0 | -0.102 | Unusually intense multi-room activity for this home |
 | 2012-08-05 10:00:00 | 2 | 1961.0 | 7.0 | -0.102 | Unusually intense multi-room activity for this home |
 | 2012-11-28 13:00:00 | 2 | 2022.0 | 7.0 | -0.101 | Unusually intense multi-room activity for this home |
+
+### Significant Sensor Deviations
+
+These alerts compare each sensor with its own historical activity at the same hour. They include unusually high and unusually low activity; a high-use sensor does not alert merely because it is frequently active.
+
+| window_start | sensor_name | observed_events | expected_events | low_alert_threshold | high_alert_threshold | deviation_events | deviation_score | history_windows | alert |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2013-12-05 12:00:00 | Kitchen | 1117.0 | 14.0 | 0.0 | 566.02 | 1103.0 | 53.14 | 1037 | HIGH_DEVIATION |
+| 2012-01-30 20:00:00 | WorkArea | 1106.0 | 24.0 | 0.0 | 333.65 | 1082.0 | 30.408 | 1036 | HIGH_DEVIATION |
+| 2014-04-12 11:00:00 | Kitchen | 1066.0 | 2.0 | 0.0 | 601.12 | 1064.0 | 358.829 | 1037 | HIGH_DEVIATION |
+| 2012-11-28 13:00:00 | LivingRoom | 1075.0 | 36.0 | 0.0 | 453.76 | 1039.0 | 21.9 | 1037 | HIGH_DEVIATION |
+| 2011-11-28 13:00:00 | LivingRoom | 1068.0 | 36.0 | 0.0 | 453.76 | 1032.0 | 21.752 | 1037 | HIGH_DEVIATION |
+| 2014-03-08 10:00:00 | Kitchen | 1004.0 | 2.0 | 0.0 | 736.0 | 1002.0 | 337.92 | 1037 | HIGH_DEVIATION |
+| 2014-02-18 09:00:00 | Kitchen | 1004.0 | 12.0 | 0.0 | 633.74 | 992.0 | 55.758 | 1037 | HIGH_DEVIATION |
+| 2011-10-23 11:00:00 | Bedroom | 974.0 | 2.0 | 0.0 | 468.2 | 972.0 | 327.803 | 1037 | HIGH_DEVIATION |
+| 2013-10-12 19:00:00 | Bedroom | 964.0 | 0.0 | 0.0 | 420.7 | 964.0 | 964.0 | 1036 | HIGH_DEVIATION |
+| 2014-04-05 12:00:00 | Bedroom | 937.0 | 4.0 | 0.0 | 428.0 | 933.0 | 157.325 | 1037 | HIGH_DEVIATION |
 
 ### Key Visuals
 

@@ -59,6 +59,7 @@ This makes the project suitable for settings where labeled activity data is unav
 
 - Builds a separate historical baseline for every sensor and hour of day
 - Creates an alert only when a sensor exceeds or falls below its own usual range by a material amount
+- Requires the activity to be among the most extreme 0.5% of the sensor's observations at that hour, avoiding alerts for ordinary variation
 - Prevents high-frequency sensors from being treated as anomalous merely because they are often active
 - Saves a tabular alert report with the sensor name, observed activity, and expected activity
 

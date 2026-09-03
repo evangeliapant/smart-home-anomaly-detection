@@ -19,6 +19,7 @@ from src.automation.simulator import (
 from src.features.build_features import build_window_features
 from src.features.windowing import build_window_index
 from src.models.clustering import fit_kmeans
+from src.models.deviations import build_significant_deviation_table
 from src.pipeline_paths import DEFAULT_SAMPLE_RAW
 
 
@@ -207,6 +208,26 @@ class AnomalyExplanationTests(unittest.TestCase):
         )
 
         self.assertIn("dense burst", explanation.lower())
+
+
+class DeviationAlertTests(unittest.TestCase):
+    def test_busy_sensor_does_not_alert_when_activity_is_usual(self) -> None:
+        timestamps = pd.date_range("2024-01-01 08:00:00", periods=10, freq="D")
+        features = pd.DataFrame({"window_start": timestamps, "Kitchen": [100.0] * 10})
+
+        alerts = build_significant_deviation_table(features, ["Kitchen"])
+
+        self.assertTrue(alerts.empty)
+
+    def test_reports_named_significant_sensor_deviation(self) -> None:
+        timestamps = pd.date_range("2024-01-01 08:00:00", periods=10, freq="D")
+        features = pd.DataFrame({"window_start": timestamps, "Kitchen": [10.0] * 9 + [40.0]})
+
+        alerts = build_significant_deviation_table(features, ["Kitchen"])
+
+        self.assertEqual(len(alerts), 1)
+        self.assertEqual(alerts.loc[0, "sensor_name"], "Kitchen")
+        self.assertEqual(alerts.loc[0, "alert"], "SIGNIFICANT_DEVIATION")
 
 
 class PipelineDefaultTests(unittest.TestCase):

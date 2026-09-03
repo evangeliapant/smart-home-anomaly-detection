@@ -55,12 +55,19 @@ This makes the project suitable for settings where labeled activity data is unav
 - Isolation Forest on the engineered window-level features
 - Flags windows whose activity pattern differs from typical behavior
 
-### 4. Routine Stability Analysis
+### 4. Significant-Deviation Alerts
+
+- Builds a separate historical baseline for every sensor and hour of day
+- Creates an alert only when a sensor exceeds its own usual range by a material amount
+- Prevents high-frequency sensors from being treated as anomalous merely because they are often active
+- Saves a tabular alert report with the sensor name, observed activity, and expected activity
+
+### 5. Routine Stability Analysis
 
 - Daily aggregation of cluster activity
 - Stability score combining frequency and temporal consistency
 
-### 5. Automation Prototype
+### 6. Automation Prototype
 
 - Tiered outputs: `AUTO`, `RECOMMEND`, `MONITOR`
 - Suggestions generated only for stable and interpretable routines
@@ -82,9 +89,10 @@ The pipeline works as follows:
    - inactivity flag.
 5. Run KMeans to discover recurring behavioral window types.
 6. Run Isolation Forest to detect unusual windows.
-7. Score cluster stability across days.
-8. Generate conservative automation suggestions from the most stable clusters.
-9. Save outputs as processed tables, figures, and report files.
+7. Create significant-deviation alerts relative to each sensor's hourly history.
+8. Score cluster stability across days.
+9. Generate conservative automation suggestions from the most stable clusters.
+10. Save outputs as processed tables, figures, and report files.
 
 ## How to Read the Results
 
@@ -109,6 +117,11 @@ The project outputs are meant to be interpreted in layers:
   - anomalies are windows that differ from normal behavior,
   - in this branch they represent unusual **hours**,
   - in the main branch they represent unusual short **bursts**.
+
+- **Significant-deviation alerts**
+  - are intended for alerting rather than exploratory model output,
+  - compare a sensor to its own historical activity at the same hour,
+  - are exported in a table with sensor names and observed, expected, and excess event counts.
 
 ## Main Takeaway
 
@@ -179,6 +192,9 @@ python -m scripts.run_pipeline
 ```bash
 python -m scripts.run_pipeline --window-minutes 15
 ```
+
+The run also writes `outputs/tables/<dataset>/<dataset>_significant_deviations.csv`.
+Use `--deviations-out <path>` to select another location.
 
 5. View cluster summaries, anomalies, and routine suggestions:
 

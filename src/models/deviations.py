@@ -1,0 +1,91 @@
+"""History-relative sensor deviations used for explainable alerts.
+
+The Isolation Forest output is retained as a broad exploratory signal.  This
+module answers the operational question separately: did an individual sensor
+fire *more often than is usual for that sensor at this hour*?
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+
+
+MAD_SCALE = 1.4826
+
+
+def build_significant_deviation_table(
+    features: pd.DataFrame,
+    sensor_cols: list[str],
+    *,
+    z_threshold: float = 3.5,
+    min_history_windows: int = 7,
+    min_excess_events: float = 3.0,
+) -> pd.DataFrame:
+    """Return one row for every significant sensor deviation.
+
+    Baselines are calculated separately for every sensor and hour of day with
+    a median/MAD statistic.  Consequently, a sensor which is normally very
+    active at (for example) 08:00 does not alert just because it has a large
+    raw event count.  Only a material excess above its own historical range is
+    retained. The report keeps the original sensor name so the result remains
+    easy to interpret for the current datasets.
+    """
+    required = {"window_start", *sensor_cols}
+    missing = required.difference(features.columns)
+    if missing:
+        raise ValueError(f"Features are missing required columns: {sorted(missing)}")
+    if not sensor_cols:
+        raise ValueError("At least one sensor column is required")
+
+    wide = features[["window_start", *sensor_cols]].copy()
+    wide["window_start"] = pd.to_datetime(wide["window_start"], errors="coerce")
+    wide = wide.dropna(subset=["window_start"])
+    wide["hour"] = wide["window_start"].dt.hour
+    long = wide.melt(
+        id_vars=["window_start", "hour"],
+        value_vars=sensor_cols,
+        var_name="sensor_name",
+        value_name="observed_events",
+    )
+    long["observed_events"] = pd.to_numeric(long["observed_events"], errors="coerce").fillna(0.0)
+
+    grouped = long.groupby(["sensor_name", "hour"])["observed_events"]
+    baseline = grouped.agg(history_windows="size", expected_events="median").reset_index()
+    mad = grouped.apply(lambda values: float(np.median(np.abs(values - np.median(values))))).rename("mad")
+    baseline = baseline.merge(mad.reset_index(), on=["sensor_name", "hour"], how="left")
+
+    # A zero MAD is common for sparse event counts.  The Poisson-like fallback
+    # keeps the threshold meaningful without treating routine zero/one counts
+    # as alerts.
+    baseline["robust_scale"] = baseline["mad"] * MAD_SCALE
+    fallback_scale = np.sqrt(np.maximum(baseline["expected_events"], 1.0))
+    baseline["robust_scale"] = baseline["robust_scale"].where(
+        baseline["robust_scale"] > 0, fallback_scale
+    )
+    baseline["alert_threshold"] = baseline["expected_events"] + z_threshold * baseline["robust_scale"]
+
+    table = long.merge(baseline, on=["sensor_name", "hour"], how="left")
+    table["excess_events"] = table["observed_events"] - table["expected_events"]
+    table["deviation_score"] = table["excess_events"] / table["robust_scale"]
+    significant = table[
+        (table["history_windows"] >= min_history_windows)
+        & (table["excess_events"] >= min_excess_events)
+        & (table["deviation_score"] >= z_threshold)
+    ].copy()
+
+    significant["alert"] = "SIGNIFICANT_DEVIATION"
+    significant = significant[
+        [
+            "window_start",
+            "sensor_name",
+            "observed_events",
+            "expected_events",
+            "alert_threshold",
+            "excess_events",
+            "deviation_score",
+            "history_windows",
+            "alert",
+        ]
+    ].sort_values(["deviation_score", "window_start"], ascending=[False, True])
+    return significant.reset_index(drop=True).round(3)

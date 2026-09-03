@@ -7,6 +7,7 @@ from src.features.build_features import build_window_features
 from src.features.windowing import add_fixed_windows, build_window_index
 from src.models.anomaly import fit_isolation_forest
 from src.models.clustering import DEFAULT_SILHOUETTE_SAMPLE_SIZE, fit_kmeans
+from src.models.deviations import build_significant_deviation_table
 from src.pipeline_paths import (
     DEFAULT_SAMPLE_RAW,
     default_output_path,
@@ -74,6 +75,11 @@ def parse_args() -> Namespace:
         "--features-models-out",
         type=Path,
         help="CSV path for engineered features plus cluster/anomaly outputs.",
+    )
+    parser.add_argument(
+        "--deviations-out",
+        type=Path,
+        help="CSV path for significant sensor-deviation alerts.",
     )
     return parser.parse_args()
 
@@ -157,11 +163,21 @@ def main() -> None:
     feats["is_anomaly"] = pred == -1
     feats["anomaly_score"] = score
 
+    sensor_cols = [column for column in feats.columns if column in events["sensor"].unique()]
+    deviations = build_significant_deviation_table(feats, sensor_cols)
+    alert_windows = set(deviations["window_start"].astype(str))
+    feats["has_significant_deviation"] = feats["window_start"].astype(str).isin(alert_windows)
+
     ensure_parent_dir(features_models_out)
     feats.to_csv(features_models_out, index=False)
 
+    deviations_out = args.deviations_out or Path("outputs") / "tables" / raw_path.stem / f"{raw_path.stem}_significant_deviations.csv"
+    ensure_parent_dir(deviations_out)
+    deviations.to_csv(deviations_out, index=False)
+
     print(f"Saved features: {features_out}")
     print(f"Saved modeled features: {features_models_out}")
+    print(f"Saved {len(deviations)} significant deviation alerts: {deviations_out}")
 
 
 if __name__ == "__main__":

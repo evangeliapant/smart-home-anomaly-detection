@@ -78,6 +78,8 @@ def build_house_section(house: str, window_minutes: int) -> str:
     active_windows = int((df["total_events"] > 0).sum())
     inactive_windows = int((df["total_events"] == 0).sum())
     anomaly_count = int(df["is_anomaly"].sum())
+    deviation_path = ROOT / "outputs" / "tables" / house / f"{house}_significant_deviations.csv"
+    deviations = pd.read_csv(deviation_path) if deviation_path.exists() else pd.DataFrame()
     anomaly_examples = (
         df[df["is_anomaly"] & (df["total_events"] > 0)]
         .sort_values("anomaly_score")
@@ -131,6 +133,7 @@ def build_house_section(house: str, window_minutes: int) -> str:
         f"- Active windows: `{active_windows:,}`",
         f"- Inactive windows: `{inactive_windows:,}`",
         f"- Detected anomalies: `{anomaly_count:,}`",
+        f"- Significant sensor-deviation alerts: `{len(deviations):,}`",
         f"- Sensor features: `{', '.join(sensor_cols)}`",
         "",
         "### Cluster Summary",
@@ -148,6 +151,13 @@ def build_house_section(house: str, window_minutes: int) -> str:
         "### Top Anomaly Windows",
         "",
         format_dataframe(anomaly_examples.round(3)),
+        "",
+        "### Significant Sensor Deviations",
+        "",
+        "These alerts compare each sensor with its own historical activity at the same hour. "
+        "A high-use sensor does not alert merely because it is frequently active.",
+        "",
+        format_dataframe(deviations.head(10)),
         "",
         "### Key Visuals",
         "",

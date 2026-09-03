@@ -227,7 +227,18 @@ class DeviationAlertTests(unittest.TestCase):
 
         self.assertEqual(len(alerts), 1)
         self.assertEqual(alerts.loc[0, "sensor_name"], "Kitchen")
-        self.assertEqual(alerts.loc[0, "alert"], "SIGNIFICANT_DEVIATION")
+        self.assertEqual(alerts.loc[0, "alert"], "HIGH_DEVIATION")
+
+    def test_reports_unusually_low_sensor_activity(self) -> None:
+        timestamps = pd.date_range("2024-01-01 08:00:00", periods=10, freq="D")
+        features = pd.DataFrame({"window_start": timestamps, "Kitchen": [20.0] * 9 + [1.0]})
+
+        alerts = build_significant_deviation_table(features, ["Kitchen"])
+
+        self.assertEqual(len(alerts), 1)
+        self.assertEqual(alerts.loc[0, "sensor_name"], "Kitchen")
+        self.assertEqual(alerts.loc[0, "alert"], "LOW_DEVIATION")
+        self.assertLess(alerts.loc[0, "deviation_score"], 0)
 
 
 class PipelineDefaultTests(unittest.TestCase):

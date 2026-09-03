@@ -2,7 +2,8 @@
 
 The Isolation Forest output is retained as a broad exploratory signal.  This
 module answers the operational question separately: did an individual sensor
-fire *more often than is usual for that sensor at this hour*?
+fire substantially more or less often than is usual for that sensor at this
+hour?
 """
 
 from __future__ import annotations
@@ -20,16 +21,17 @@ def build_significant_deviation_table(
     *,
     z_threshold: float = 3.5,
     min_history_windows: int = 7,
-    min_excess_events: float = 3.0,
+    min_difference_events: float = 3.0,
 ) -> pd.DataFrame:
     """Return one row for every significant sensor deviation.
 
     Baselines are calculated separately for every sensor and hour of day with
     a median/MAD statistic.  Consequently, a sensor which is normally very
     active at (for example) 08:00 does not alert just because it has a large
-    raw event count.  Only a material excess above its own historical range is
-    retained. The report keeps the original sensor name so the result remains
-    easy to interpret for the current datasets.
+    raw event count. A material excess (high deviation) or shortfall (low
+    deviation) outside its own historical range is retained. The report keeps
+    the original sensor name so the result remains easy to interpret for the
+    current datasets.
     """
     required = {"window_start", *sensor_cols}
     missing = required.difference(features.columns)
@@ -63,29 +65,44 @@ def build_significant_deviation_table(
     baseline["robust_scale"] = baseline["robust_scale"].where(
         baseline["robust_scale"] > 0, fallback_scale
     )
-    baseline["alert_threshold"] = baseline["expected_events"] + z_threshold * baseline["robust_scale"]
+    baseline["high_alert_threshold"] = baseline["expected_events"] + z_threshold * baseline["robust_scale"]
+    baseline["low_alert_threshold"] = np.maximum(
+        baseline["expected_events"] - z_threshold * baseline["robust_scale"], 0.0
+    )
 
     table = long.merge(baseline, on=["sensor_name", "hour"], how="left")
-    table["excess_events"] = table["observed_events"] - table["expected_events"]
-    table["deviation_score"] = table["excess_events"] / table["robust_scale"]
-    significant = table[
-        (table["history_windows"] >= min_history_windows)
-        & (table["excess_events"] >= min_excess_events)
+    table["signed_difference_events"] = table["observed_events"] - table["expected_events"]
+    table["deviation_score"] = table["signed_difference_events"] / table["robust_scale"]
+    table["deviation_events"] = table["signed_difference_events"].abs()
+    has_enough_history = table["history_windows"] >= min_history_windows
+    high_deviation = (
+        has_enough_history
+        & (table["signed_difference_events"] >= min_difference_events)
         & (table["deviation_score"] >= z_threshold)
-    ].copy()
-
-    significant["alert"] = "SIGNIFICANT_DEVIATION"
+    )
+    low_deviation = (
+        has_enough_history
+        & (table["signed_difference_events"] <= -min_difference_events)
+        & (table["deviation_score"] <= -z_threshold)
+    )
+    significant = table[high_deviation | low_deviation].copy()
+    significant["alert"] = np.where(
+        significant["deviation_score"] > 0,
+        "HIGH_DEVIATION",
+        "LOW_DEVIATION",
+    )
     significant = significant[
         [
             "window_start",
             "sensor_name",
             "observed_events",
             "expected_events",
-            "alert_threshold",
-            "excess_events",
+            "low_alert_threshold",
+            "high_alert_threshold",
+            "deviation_events",
             "deviation_score",
             "history_windows",
             "alert",
         ]
-    ].sort_values(["deviation_score", "window_start"], ascending=[False, True])
+    ].sort_values(["deviation_events", "window_start"], ascending=[False, True])
     return significant.reset_index(drop=True).round(3)

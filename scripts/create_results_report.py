@@ -155,7 +155,7 @@ def build_house_section(house: str, window_minutes: int) -> str:
         "### Significant Sensor Deviations",
         "",
         "These alerts compare each sensor with its own historical activity at the same hour. "
-        "A high-use sensor does not alert merely because it is frequently active.",
+        "They include unusually high and unusually low activity; a high-use sensor does not alert merely because it is frequently active.",
         "",
         format_dataframe(deviations.head(10)),
         "",

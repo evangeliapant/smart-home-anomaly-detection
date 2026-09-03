@@ -58,7 +58,7 @@ This makes the project suitable for settings where labeled activity data is unav
 ### 4. Significant-Deviation Alerts
 
 - Builds a separate historical baseline for every sensor and hour of day
-- Creates an alert only when a sensor exceeds its own usual range by a material amount
+- Creates an alert only when a sensor exceeds or falls below its own usual range by a material amount
 - Prevents high-frequency sensors from being treated as anomalous merely because they are often active
 - Saves a tabular alert report with the sensor name, observed activity, and expected activity
 
@@ -120,7 +120,7 @@ The project outputs are meant to be interpreted in layers:
 
 - **Significant-deviation alerts**
   - are intended for alerting rather than exploratory model output,
-  - compare a sensor to its own historical activity at the same hour,
+  - compare a sensor to its own historical activity at the same hour, including both unusually high and unusually low activity,
   - are exported in a table with sensor names and observed, expected, and excess event counts.
 
 ## Main Takeaway
